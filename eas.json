@@ -1,0 +1,23 @@
+{
+  "build": {
+    "development": {
+      "developmentClient": true,
+      "distribution": "internal",
+      "env": {
+        "POD_INSTALL_OPTIONS": "--repo-update"
+      }
+    },
+    "development-simulator": {
+      "developmentClient": true,
+      "ios": {
+        "simulator": true
+      }
+    },
+    "preview": {
+      "distribution": "internal"
+    },
+    "production": {
+      "channel": "production"
+    }
+  }
+}
