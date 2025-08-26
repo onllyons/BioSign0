@@ -11,6 +11,7 @@ export default function HomeScreen() {
   const styles = createStyles(theme);
   
   const handleGoToLogin = () => { router.push('/login'); };
+  const handleGoToChangePassword = () => { router.push('/change-password'); };
 
   const totalDocuments = documents.length;
   const signedDocuments = documents.filter(doc => doc.signed).length;
@@ -29,6 +30,7 @@ export default function HomeScreen() {
       <View style={styles.content}>
 
         <RNButton title="Go to Login" onPress={handleGoToLogin} />
+        <RNButton title="Go to change password" onPress={handleGoToChangePassword} />
 
         <Card style={styles.quickActions}>
           <Text variant="headline" color="onSurface" style={styles.sectionTitle}>
