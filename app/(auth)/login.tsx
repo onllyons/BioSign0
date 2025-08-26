@@ -282,7 +282,6 @@ const createStyles = (theme: any) => {
     },
 
     primaryBtn: {
-      marginTop: spacing.md,
       backgroundColor: colors.primary,
       borderRadius: radius,
       paddingVertical: spacing.md + 2,
