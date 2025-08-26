@@ -1,6 +1,6 @@
-import { View, StyleSheet } from 'react-native';
+import { View, StyleSheet, Button as RNButton } from 'react-native';
 import { useTheme } from '@/contexts/ThemeContext';
-import { Text, Card, Button, Spacer, PressableButton } from '@/components/ui';
+import { Text, Card, Spacer, PressableButton } from '@/components/ui';
 import { useRouter } from 'expo-router';
 import { useData } from '@/contexts/DataContext';
 
@@ -9,8 +9,9 @@ export default function HomeScreen() {
   const { documents } = useData();
   const router = useRouter();
   const styles = createStyles(theme);
- 
-  // Calculate statistics
+  
+  const handleGoToLogin = () => { router.push('/login'); };
+
   const totalDocuments = documents.length;
   const signedDocuments = documents.filter(doc => doc.signed).length;
   const pendingDocuments = totalDocuments - signedDocuments;
@@ -26,6 +27,9 @@ export default function HomeScreen() {
         </Text>
       </View>
       <View style={styles.content}>
+
+        <RNButton title="Go to Login" onPress={handleGoToLogin} />
+
         <Card style={styles.quickActions}>
           <Text variant="headline" color="onSurface" style={styles.sectionTitle}>
             Quick Actions
