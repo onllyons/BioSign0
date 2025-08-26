@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
+import { View, StyleSheet, ScrollView, TouchableOpacity, Linking } from 'react-native';
 import { useTheme } from '@/contexts/ThemeContext';
 import { Text, Card, Spacer, Icon } from '@/components/ui';
 import { useHaptics } from '@/hooks/useHaptics';
@@ -159,6 +159,10 @@ export default function SettingsScreen() {
     updateUIPreferences({ [key]: value });
   };
 
+  const openUrl = (url: string) => {
+    Linking.openURL(url).catch(err => console.error("Couldn't load page", err));
+  };
+
   return (
     <View style={styles.container}>
       
@@ -283,19 +287,45 @@ export default function SettingsScreen() {
           </TouchableOpacity>
 
           <View style={styles.menuSeparator} />
-          <TouchableOpacity style={[styles.menuRow, styles.lastMenuRow]} accessibilityRole="button" hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
+          <TouchableOpacity
+            style={[styles.menuRow, styles.lastMenuRow]}
+            accessibilityRole="button"
+            hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+            onPress={() => openUrl('https://biosign-app.com/')}
+          >
+            <Text variant="body" color="onSurface" style={styles.menuLabel}>Web site</Text>
+            <Ionicons name="chevron-forward" size={18} color={theme.colors.onSurfaceVariant}/>
+          </TouchableOpacity>
+
+          <View style={styles.menuSeparator} />
+          <TouchableOpacity
+            style={[styles.menuRow, styles.lastMenuRow]}
+            accessibilityRole="button"
+            hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+            onPress={() => openUrl('https://biosign-app.com/contact')}
+          >
             <Text variant="body" color="onSurface" style={styles.menuLabel}>Contact Us</Text>
             <Ionicons name="chevron-forward" size={18} color={theme.colors.onSurfaceVariant}/>
           </TouchableOpacity>
 
           <View style={styles.menuSeparator} />
-          <TouchableOpacity style={[styles.menuRow, styles.lastMenuRow]} accessibilityRole="button" hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
+          <TouchableOpacity
+            style={[styles.menuRow, styles.lastMenuRow]}
+            accessibilityRole="button"
+            hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+            onPress={() => openUrl('https://biosign-app.com/privacy-policy')}
+          >
             <Text variant="body" color="onSurface" style={styles.menuLabel}>Privacy Policy</Text>
             <Ionicons name="chevron-forward" size={18} color={theme.colors.onSurfaceVariant}/>
           </TouchableOpacity>
 
           <View style={styles.menuSeparator} />
-          <TouchableOpacity style={[styles.menuRow, styles.lastMenuRow]} accessibilityRole="button" hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
+          <TouchableOpacity
+            style={[styles.menuRow, styles.lastMenuRow]}
+            accessibilityRole="button"
+            hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+            onPress={() => openUrl('https://biosign-app.com/term')}
+          >
             <Text variant="body" color="onSurface" style={styles.menuLabel}>Terms of Use</Text>
             <Ionicons name="chevron-forward" size={18} color={theme.colors.onSurfaceVariant}/>
           </TouchableOpacity>
