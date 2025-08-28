@@ -34,14 +34,14 @@
     "experiments": {
       "typedRoutes": true
     },
+    "android": {
+      "package": "com.sergiuc121.biosign0"
+    },
     "extra": {
       "router": {},
       "eas": {
-        "projectId": "694d17cb-c7cc-403b-bf15-5d871187de26"
+        "projectId": "dd34345c-47f8-4912-8d82-884f5854ee6d"
       }
-    },
-    "android": {
-      "package": "com.sergiuc121.biosign0"
     }
   }
 }
