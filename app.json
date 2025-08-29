@@ -2,7 +2,7 @@
   "expo": {
     "name": "BioSign0",
     "slug": "biosign0",
-    "version": "1.0.1",
+    "version": "1.0.2",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
     "scheme": "biosign0",
@@ -14,7 +14,7 @@
     },
     "newArchEnabled": false,
     "ios": {
-      "buildNumber": "2",
+      "buildNumber": "3",
       "supportsTablet": true,
       "bundleIdentifier": "com.sergiuc121.biosign0",
       "infoPlist": {

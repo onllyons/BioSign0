@@ -90,7 +90,7 @@ export default function HomeScreen() {
                     />
                 </Card>
                 <Spacer size="lg"/>
-                <Card style={styles.statsCard}>
+                {/*<Card style={styles.statsCard}>
                     <Text variant="headline" color="onSurface" style={styles.sectionTitle}>
                         Overview
                     </Text>
@@ -109,7 +109,7 @@ export default function HomeScreen() {
                             <Text variant="caption" color="onSurfaceVariant">Pending</Text>
                         </View>
                     </View>
-                </Card>
+                </Card>*/}
             </View>
         </View>
     );
