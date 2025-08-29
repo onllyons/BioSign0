@@ -223,7 +223,7 @@ export default function DocumentsScreen() {
       <View style={styles.container}>
         <View style={styles.header}>
           <PressableButton
-            title="Upload Document"
+            title="Upload Document 123"
             onPress={handleUpload}
             variant="primary"
             style={styles.uploadButton}
@@ -280,8 +280,13 @@ export default function DocumentsScreen() {
   return (
     <View style={styles.container}>
       <View style={styles.header}>
+
+        <Text variant="title" color="onBackground" style={styles.title}>
+          Upload your documents
+        </Text>
+
         <PressableButton
-          title="Upload Document"
+          title="Upload Document 432"
           onPress={handleUpload}
           variant="primary"
           style={styles.uploadButton}
@@ -530,9 +535,13 @@ const createStyles = (theme: any) => StyleSheet.create({
     backgroundColor: theme.colors.background,
   },
   header: {
-    padding: theme.spacing.lg,
-    paddingBottom: theme.spacing.md,
     position: 'relative',
+    paddingTop: theme.spacing.xxl + theme.spacing.md,
+    paddingHorizontal: theme.spacing.lg,
+    paddingBottom: theme.spacing.xl,
+  },
+  title: {
+    marginBottom: theme.spacing.md,
   },
   uploadButton: {
     width: '100%',
