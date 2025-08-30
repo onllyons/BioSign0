@@ -3,7 +3,7 @@
     "name": "BioSign0",
     "owner": "sergiuc121",
     "slug": "biosign0",
-    "version": "1.0.5",
+    "version": "1.0.6",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
     "scheme": "biosign0",
@@ -15,7 +15,7 @@
     },
     "newArchEnabled": false,
     "ios": {
-      "buildNumber": "5",
+      "buildNumber": "6",
       "supportsTablet": true,
       "bundleIdentifier": "com.sergiuc121.biosign0",
       "infoPlist": {
