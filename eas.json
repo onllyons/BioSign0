@@ -1,4 +1,8 @@
 {
+  "cli": {
+    "version": ">= 16.13.2",
+    "appVersionSource": "remote"
+  },
   "build": {
     "development": {
       "developmentClient": true,
@@ -10,7 +14,7 @@
     "development-simulator": {
       "developmentClient": true,
       "ios": {
-        "simulator": true 
+        "simulator": true
       }
     },
     "preview": {
@@ -18,7 +22,11 @@
     },
     "production": {
       "distribution": "store",
-      "channel": "production"
+      "channel": "production",
+      "autoIncrement": true
     }
+  },
+  "submit": {
+    "production": {}
   }
 }

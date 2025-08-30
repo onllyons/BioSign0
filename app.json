@@ -1,6 +1,7 @@
 {
   "expo": {
     "name": "BioSign0",
+    "owner": "sergiuc121",
     "slug": "biosign0",
     "version": "1.0.5",
     "orientation": "portrait",
