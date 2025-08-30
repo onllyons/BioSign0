@@ -10,7 +10,7 @@
     "development-simulator": {
       "developmentClient": true,
       "ios": {
-        "simulator": true
+        "simulator": true 
       }
     },
     "preview": {
