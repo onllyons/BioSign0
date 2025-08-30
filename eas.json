@@ -17,6 +17,7 @@
       "distribution": "internal"
     },
     "production": {
+      "distribution": "store",
       "channel": "production"
     }
   }

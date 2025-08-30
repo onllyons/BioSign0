@@ -4,6 +4,8 @@ import { useTheme } from '@/contexts/ThemeContext';
 import { Text, Card, Badge, Spacer, Button, EmptyState, ErrorBanner } from '@/components/ui';
 import { Ionicons } from '@expo/vector-icons';
 import { useData } from '@/contexts/DataContext';
+import * as Updates from 'expo-updates';
+
 
 type FilterType = 'all' | 'uploads' | 'signs' | 'views' | 'shares';
 
@@ -25,7 +27,6 @@ export default function ActivityScreen() {
     });
   }, [getRecentActivity, documents]);
 
-  // Simulate error state based on settings toggle
   React.useEffect(() => {
     setActivityError(simulateErrors);
   }, [simulateErrors]);
@@ -101,6 +102,50 @@ export default function ActivityScreen() {
 
   return (
     <View style={styles.container}>
+
+
+    <View style={ { marginVertical: 20 }}>
+      <Text style={{ fontSize: 10, color: 'black' }}>
+        OTA: {Updates.updateId ?? 'No OTA'}
+      </Text>
+      <Text style={{ fontSize: 10, color: 'black' }}>
+        Runtime: {Updates.runtimeVersion ?? 'n/a'}
+      </Text>
+      <Text style={{ fontSize: 10, color: 'black' }}>
+        Channel: production
+      </Text>
+
+      <TouchableOpacity
+        onPress={() => Updates.reloadAsync()}
+        style={{ marginTop: 10 }}
+      >
+        <Text style={{ color: 'blue' }}>Restart the application</Text>
+      </TouchableOpacity>
+
+      <TouchableOpacity
+        onPress={async () => {
+          try {
+            const update = await Updates.checkForUpdateAsync();
+            if (update.isAvailable) {
+              await Updates.fetchUpdateAsync();
+              await Updates.reloadAsync();
+            } else {
+              alert('No new update available.');
+            }
+          } catch (error) {
+            alert(`Error fetching latest Expo update: ${error}`);
+          }
+        }}
+        style={{ marginTop: 10 }}
+      >
+        <Text style={{ color: 'blue' }}>Update the application</Text>
+      </TouchableOpacity>
+    </View>
+
+
+
+
+    {/*
       <View style={styles.header}>
         <Text variant="title" color="onBackground" style={styles.title}>
           Activity Timeline
@@ -217,6 +262,7 @@ export default function ActivityScreen() {
           />
         )}
       </ScrollView>
+      */}
     </View>
   );
 }

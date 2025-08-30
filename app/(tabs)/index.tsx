@@ -1,119 +1,165 @@
-import {View, StyleSheet, Button as RNButton} from 'react-native';
-import {useTheme} from '@/contexts/ThemeContext';
-import {Text, Card, Spacer, PressableButton} from '@/components/ui';
-import {useRouter} from 'expo-router';
-import {useData} from '@/contexts/DataContext';
-import {getUser, isAuthenticated, login, logout} from "@/utils/Auth";
-import {SERVER_AJAX_URL, useRequests} from "@/hooks/useRequests";
-import React, {useState} from "react";
-import Loader from "@/components/modals/Loader";
+import React, { useEffect, useState } from 'react';
+import { View, StyleSheet, Button, Alert } from 'react-native';
+import * as LocalAuthentication from 'expo-local-authentication';
+
+import { useTheme } from '@/contexts/ThemeContext';
+import { Text, Card, Spacer, PressableButton } from '@/components/ui';
+import { useRouter } from 'expo-router';
+import { useData } from '@/contexts/DataContext';
+import { SERVER_AJAX_URL, useRequests } from '@/hooks/useRequests';
+import { enableLocalBiometric, disableLocalBiometric } from '@/lib/secure';
 
 export default function HomeScreen() {
-    const {theme} = useTheme();
-    const {documents, restartApp} = useData();
-    const router = useRouter();
-    const styles = createStyles(theme);
-    const {sendDefaultRequest} = useRequests()
-    const [loader, setLoader] = useState(false)
+  const { theme } = useTheme();
+  const { documents } = useData();
+  const router = useRouter();
+  const styles = createStyles(theme);
+  const { sendDefaultRequest } = useRequests();
 
-    const handleGoToLogin = () => {
-        router.push('/login');
-    };
-    const handleGoToChangePassword = () => {
-        router.push('/change-password');
-    };
+  const totalDocuments = documents.length;
+  const signedDocuments = documents.filter(doc => doc.signed).length;
+  const pendingDocuments = totalDocuments - signedDocuments;
 
-    const handleConfirmEmail = async () => {
-        setLoader(true)
+  const [loader, setLoader] = useState(false);
+  const [isBiometricEnabled, setIsBiometricEnabled] = useState(false);
 
-        try {
-            await sendDefaultRequest({url: `${SERVER_AJAX_URL}/user/send_confirm_email.php`})
-        } catch (e) {
-        } finally {
-            setLoader(false)
+  // --- API helpers (UNICE) ---
+  const fetchBiometricStatus = async () => {
+    const data = await sendDefaultRequest<{ success: boolean; isBiometricEnabled: boolean }>({
+      url: `${SERVER_AJAX_URL}/user/security_get.php`,
+      data: {},
+      showOptions: { success: false },
+    });
+    return !!data?.isBiometricEnabled;
+  };
+
+  const saveBiometricStatus = async (status: boolean) => {
+    const data = await sendDefaultRequest<{ success: boolean; isBiometricEnabled: boolean }>({
+      url: `${SERVER_AJAX_URL}/user/security_set.php`,
+      data: { isBiometricEnabled: status },
+      showOptions: { success: false },
+    });
+    return !!data?.success;
+  };
+
+  // --- la mount: ia flag-ul din DB ---
+  useEffect(() => {
+    (async () => {
+      try {
+        setLoader(true);
+        const s = await fetchBiometricStatus();
+        setIsBiometricEnabled(s);
+      } catch (e) {
+        console.log('Failed to fetch biometric flag', e);
+      } finally {
+        setLoader(false);
+      }
+    })();
+  }, []);
+
+    const handleSetBiometricAuth = async () => {
+      try {
+        setLoader(true);
+
+        if (isBiometricEnabled) {
+          // Dezactivare: server + local
+          const ok = await saveBiometricStatus(false);
+          if (ok) {
+            await disableLocalBiometric();
+            setIsBiometricEnabled(false);
+          }
+          return;
         }
+
+        // Activare
+        const compatible = await LocalAuthentication.hasHardwareAsync();
+        const enrolled = await LocalAuthentication.isEnrolledAsync();
+        if (!compatible || !enrolled) {
+          Alert.alert('Biometrie indisponibilă', 'Activează Face ID / amprentă în setările telefonului.');
+          return;
+        }
+
+        // Cere o dată biometria la activare (confirmare)
+        const res = await LocalAuthentication.authenticateAsync({
+          promptMessage: 'Activează autentificarea biometrică',
+          fallbackLabel: 'Folosește parola',
+        });
+        if (!res.success) return;
+
+        // 1) salvează preferința pe server
+        const ok = await saveBiometricStatus(true);
+        if (!ok) {
+          Alert.alert('Eroare', 'Nu am putut salva preferința pe server.');
+          return;
+        }
+
+        // 2) salvează token local care cere biometrie la pornire
+        await enableLocalBiometric();
+
+        setIsBiometricEnabled(true);
+      } finally {
+        setLoader(false);
+      }
     };
 
-    const totalDocuments = documents.length;
-    const signedDocuments = documents.filter(doc => doc.signed).length;
-    const pendingDocuments = totalDocuments - signedDocuments;
+  return (
+    <View style={styles.container}>
+      {/* dacă loader-ul tău este modal, îl poți lăsa așa */}
+      {/* <Loader visible={loader} /> */}
 
-    return (
-        <View style={styles.container}>
-            <Loader visible={loader}/>
-            <View style={styles.header}>
-                <Text variant="title" color="onBackground" style={styles.title}>
-                    BioSign
-                </Text>
-                <Text variant="body" color="onSurfaceVariant" style={styles.subtitle}>
-                    Welcome to your biometric signature app
-                </Text>
-            </View>
-            <View style={styles.content}>
-                {isAuthenticated() ? (
-                    <>
-                        <Text>Logined</Text>
-                        <Text>Email: {getUser()?.email}</Text>
-                        <Text>Id: {getUser()?.id}</Text>
-                        <RNButton title="Confirm email" onPress={handleConfirmEmail}/>
-                        <RNButton title="Go to change password" onPress={handleGoToChangePassword}/>
-                        <RNButton title="Logout" onPress={async () => {
-                            await logout()
-                            restartApp()
-                        }}/>
-                    </>
-                ) : (
-                    <RNButton title="Go to Login" onPress={handleGoToLogin}/>
-                )}
+      <View style={styles.header}>
+        <Text variant="title" color="onBackground" style={styles.title}>
+          BioSign
+        </Text>
+        <Text variant="body" color="onSurfaceVariant" style={styles.subtitle}>
+          Welcome to your biometric signature app
+        </Text>
+      </View>
 
-                <Card style={styles.quickActions}>
-                    <Text variant="headline" color="onSurface" style={styles.sectionTitle}>
-                        Quick Actions
-                    </Text>
-                    <Spacer size="md"/>
-                    <PressableButton
-                        title="Create New Document"
-                        onPress={() => router.push('/documents/create')}
-                        variant="primary"
-                        style={styles.actionButton}
-                        accessibilityLabel="Create new document"
-                        testID="quick-action-create-document"
-                    />
-                    <Spacer size="sm"/>
-                    <PressableButton
-                        title="View Recent Documents"
-                        onPress={() => router.push('/documents')}
-                        variant="outline"
-                        style={styles.actionButton}
-                        accessibilityLabel="View recent documents"
-                        testID="quick-action-view-documents"
-                    />
-                </Card>
-                <Spacer size="lg"/>
-                {/*<Card style={styles.statsCard}>
-                    <Text variant="headline" color="onSurface" style={styles.sectionTitle}>
-                        Overview
-                    </Text>
-                    <Spacer size="md"/>
-                    <View style={styles.statsRow}>
-                        <View style={styles.statItem}>
-                            <Text variant="title" color="primary">{totalDocuments}</Text>
-                            <Text variant="caption" color="onSurfaceVariant">Documents</Text>
-                        </View>
-                        <View style={styles.statItem}>
-                            <Text variant="title" color="success">{signedDocuments}</Text>
-                            <Text variant="caption" color="onSurfaceVariant">Signed</Text>
-                        </View>
-                        <View style={styles.statItem}>
-                            <Text variant="title" color="secondary">{pendingDocuments}</Text>
-                            <Text variant="caption" color="onSurfaceVariant">Pending</Text>
-                        </View>
-                    </View>
-                </Card>*/}
-            </View>
-        </View>
-    );
+      <Text>
+        Biometric Authentication: {isBiometricEnabled ? 'Enabled' : 'Disabled'}
+      </Text>
+      <Button
+        title={
+          isBiometricEnabled
+            ? 'Disable Biometric Authentication'
+            : 'Enable Biometric Authentication'
+        }
+        onPress={handleSetBiometricAuth}
+        disabled={loader}
+      />
+
+      <View style={styles.content}>
+        <Card style={styles.quickActions}>
+          <Text variant="headline" color="onSurface" style={styles.sectionTitle}>
+            Quick Actions
+          </Text>
+          <Spacer size="md" />
+          <PressableButton
+            title="Create New Document"
+            onPress={() => router.push('/documents/create')}
+            variant="primary"
+            style={styles.actionButton}
+            accessibilityLabel="Create new document"
+            testID="quick-action-create-document"
+          />
+          <Spacer size="sm" />
+          <PressableButton
+            title="View Recent Documents"
+            onPress={() => router.push('/documents')}
+            variant="outline"
+            style={styles.actionButton}
+            accessibilityLabel="View recent documents"
+            testID="quick-action-view-documents"
+          />
+        </Card>
+
+        {/* Secțiunea de statistici e comentată – o poți reactiva când vrei */}
+      </View>
+    </View>
+  );
 }
+
 
 const createStyles = (theme: any) => StyleSheet.create({
     container: {
@@ -123,10 +169,9 @@ const createStyles = (theme: any) => StyleSheet.create({
     header: {
         paddingTop: theme.spacing.xxl + theme.spacing.md,
         paddingHorizontal: theme.spacing.lg,
-        paddingBottom: theme.spacing.xl,
+        paddingBottom: theme.spacing.xs,
     },
     title: {
-        marginBottom: theme.spacing.md,
     },
     subtitle: {
         textAlign: 'left',
@@ -136,7 +181,6 @@ const createStyles = (theme: any) => StyleSheet.create({
         paddingHorizontal: theme.spacing.lg,
     },
     quickActions: {
-        padding: theme.spacing.xl,
     },
     sectionTitle: {
         marginBottom: theme.spacing.lg,

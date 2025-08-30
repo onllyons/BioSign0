@@ -1,53 +1,59 @@
-// app/(tabs)/profile.tsx
-import React from 'react';
-import {
-  View,
-  StyleSheet,
-  SafeAreaView,
-  Image,
-  Pressable,
-} from 'react-native';
-import { useTheme } from '@/contexts/ThemeContext';
-import { Text } from '@/components/ui';
-import { getUser, isAuthenticated, logout } from '@/utils/Auth';
-import { useRouter } from 'expo-router';
-import { useData } from '@/contexts/DataContext';
+import React, { useState } from "react";
+import { View, StyleSheet, SafeAreaView, Image, Button, Pressable } from "react-native";
+import { useTheme } from "@/contexts/ThemeContext";
+import { Text } from "@/components/ui";
+import { getUser, isAuthenticated, logout } from "@/utils/Auth";
+import { useRouter } from "expo-router";
+import { useData } from "@/contexts/DataContext";
+import Loader from "@/components/modals/Loader";
+import { SERVER_AJAX_URL, useRequests } from "@/hooks/useRequests";
 
 export default function ProfileScreen() {
   const { theme } = useTheme();
   const styles = createStyles(theme);
   const router = useRouter();
   const { restartApp } = useData();
-
   const currentUser = getUser();
   const isAuth = isAuthenticated();
+  const [loader, setLoader] = useState(false);
+  const { sendDefaultRequest } = useRequests();
 
-  const handleGoToLogin = () => router.push('/login');
-  const handleGoToChangePassword = () => router.push('/change-password');
+  const handleGoToLogin = () => router.push("/login");
+  const handleGoToChangePassword = () => router.push("/change-password");
+  const handleLogout = async () => { await logout(); restartApp(); };
+  
+  const handleConfirmEmail = async () => {
+    setLoader(true);
 
-  const handleLogout = async () => {
-    await logout();
-    restartApp();
+    try {
+      await sendDefaultRequest({
+        url: `${SERVER_AJAX_URL}/user/send_confirm_email.php`,
+      });
+    } catch (e) {
+      console.error("Error confirming email:", e);
+    } finally {
+      setLoader(false);
+    }
   };
 
-  // Fallbacks
-  const displayName =
-    isAuth
-      ? (currentUser?.fullName ||
-         (currentUser?.firstName && currentUser?.lastName
-           ? `${currentUser.firstName} ${currentUser.lastName}`
-           : currentUser?.email?.split('@')?.[0] || 'User'))
-      : 'Guest';
+  const displayName = isAuth
+    ? currentUser?.name || currentUser?.email?.split("@")?.[0] || "User"
+    : "Guest";
 
-  const displayEmail = isAuth ? currentUser?.email || '—' : 'Not logged in';
+  const displayEmail = isAuth ? currentUser?.email || "—" : "Not logged in";
 
   const avatarUri =
-    currentUser?.avatar ||
-    'https://prium.github.io/falcon/v3.24.0/assets/img/team/4.jpg';
+    "https://prium.github.io/falcon/v3.24.0/assets/img/team/4.jpg";
+
+  // Condiție pentru a verifica dacă afișăm butonul Confirm email
+  const showConfirmEmailButton =
+    !currentUser?.emailVerified && !currentUser?.byGoogle && !currentUser?.byApple;
 
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.wrapper}>
+        <Loader visible={loader} />
+
         {/* Header */}
         <View style={styles.header}>
           <Image source={{ uri: avatarUri }} style={styles.avatar} />
@@ -58,6 +64,22 @@ export default function ProfileScreen() {
             {displayEmail}
           </Text>
         </View>
+
+        {isAuth && currentUser && (
+          <View style={styles.card}>
+            <InfoRow label="ID" value={String(currentUser.id)} />
+            <InfoRow label="Name" value={currentUser.name || "—"} />
+            <InfoRow label="Email" value={currentUser.email || "—"} />
+            {/*<InfoRow label="Email verified" value={currentUser.emailVerified ? "Yes" : "No"} />
+            <InfoRow label="Signed with Google" value={currentUser.byGoogle ? "Yes" : "No"} />
+            <InfoRow label="Signed with Apple" value={currentUser.byApple ? "Yes" : "No"} />*/}
+          </View>
+        )}
+
+        {/* Afișează butonul doar dacă niciuna dintre condițiile nu este adevărată */}
+        {showConfirmEmailButton && (
+          <Button title="Confirm email" onPress={handleConfirmEmail} />
+        )}
 
         {isAuth ? (
           <>
@@ -111,10 +133,36 @@ export default function ProfileScreen() {
   );
 }
 
+const InfoRow = ({ label, value }: { label: string; value: string }) => (
+  <View
+    style={infoStyles.row}
+    accessible
+    accessibilityRole="text"
+    accessibilityLabel={`${label}: ${value}`}
+  >
+    <Text variant="body" color="onSurfaceVariant">
+      {label}
+    </Text>
+    <Text variant="body" color="onBackground" style={{ fontWeight: "600" }}>
+      {value}
+    </Text>
+  </View>
+);
+
+const infoStyles = StyleSheet.create({
+  row: {
+    paddingVertical: 8,
+    flexDirection: "row",
+    justifyContent: "space-between",
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomColor: "#E5E7EB",
+  },
+});
+
 const createStyles = (theme: any) => {
   const radius = theme?.radius?.xl ?? 16;
   const spacing = theme?.spacing ?? {
-    xs: 4,         // ✅ adăugat
+    xs: 4,
     sm: 8,
     md: 12,
     lg: 16,
@@ -122,30 +170,43 @@ const createStyles = (theme: any) => {
     xxl: 32,
   };
   const colors = theme?.colors ?? {
-    background: '#F7F8FA',
-    surface: '#FFFFFF',
-    onBackground: '#111111',
-    onSurface: '#111111',
-    onSurfaceVariant: '#6B7280',
-    primary: '#0A84FF',
-    outline: '#E5E7EB',
+    background: "#F7F8FA",
+    surface: "#FFFFFF",
+    onBackground: "#111111",
+    onSurface: "#111111",
+    onSurfaceVariant: "#6B7280",
+    primary: "#0A84FF",
+    outline: "#E5E7EB",
   };
 
   return StyleSheet.create({
     container: { flex: 1, backgroundColor: colors.background },
     wrapper: { flex: 1, padding: spacing.lg },
-    header: { alignItems: 'center', marginBottom: spacing.xl },
-    avatar: { width: 96, height: 96, borderRadius: 48, marginBottom: spacing.md },
-    name: { marginBottom: spacing.xs }, // ✅ acum xs există
+    header: { alignItems: "center", marginBottom: spacing.xl },
+    avatar: {
+      width: 96,
+      height: 96,
+      borderRadius: 48,
+      marginBottom: spacing.md,
+    },
+    name: { marginBottom: spacing.xs },
+    card: {
+      backgroundColor: colors.surface,
+      borderRadius: radius,
+      borderWidth: 1,
+      borderColor: colors.outline,
+      padding: spacing.lg,
+      marginBottom: spacing.lg,
+    },
     logoutBtn: {
       borderWidth: 1,
       borderColor: colors.outline,
       borderRadius: radius,
       paddingVertical: spacing.md,
-      alignItems: 'center',
+      alignItems: "center",
       marginTop: spacing.md,
     },
     logoutBtnPressed: { opacity: 0.9 },
-    logoutText: { textAlign: 'center' },
+    logoutText: { textAlign: "center" },
   });
 };

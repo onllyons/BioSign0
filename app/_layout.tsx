@@ -6,6 +6,7 @@ import {DataProvider} from '@/contexts/DataContext';
 import Toast, {BaseToast, BaseToastProps, ErrorToast} from "react-native-toast-message";
 import {isAuthenticated} from "@/utils/Auth";
 import {Analytics} from "@/components/analytics/Analytics";
+import AppGate from "../AppGate";
 
 const toastConfig = {
     success: (props: BaseToastProps) => (
@@ -55,24 +56,34 @@ export default function RootLayout() {
     return (
         <ThemeProvider>
             <DataProvider>
-                <>
-                    <Stack screenOptions={{headerShown: false}}>
-                        <Stack.Screen name="(tabs)" options={{headerShown: false}}/>
-                        {/* include auth group in routing */}
-                        {!isAuthenticated() && (
-                            <Stack.Screen name="(auth)" options={{headerShown: false}}/>
-                        )}
-                        <Stack.Screen name="+not-found"/>
-                    </Stack>
-                    <StatusBar style="auto"/>
-                    <Toast
-                        position="top"
-                        config={toastConfig}
-                        onPress={() => Toast.hide()}
-                    />
-                    <Analytics/>
-                </>
+                <AppGate>
+                    <>
+                        <Stack screenOptions={{headerShown: false}}>
+                            <Stack.Screen name="(tabs)" options={{headerShown: false}}/>
+                            {!isAuthenticated() && (
+                                <Stack.Screen name="(auth)" options={{headerShown: false}}/>
+                            )}
+                            <Stack.Screen name="+not-found"/>
+                        </Stack>
+                        <StatusBar style="auto"/>
+                        <Toast
+                            position="top"
+                            config={toastConfig}
+                            onPress={() => Toast.hide()}
+                        />
+                        <Analytics/>
+                    </>
+                </AppGate>
             </DataProvider>
         </ThemeProvider>
     );
 }
+
+
+
+
+
+
+
+
+
