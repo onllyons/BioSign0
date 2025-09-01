@@ -1,12 +1,12 @@
 {
   "expo": {
-    "name": "BioSign0",
-    "owner": "sergiuc121",
-    "slug": "biosign0",
-    "version": "1.0.6",
+    "name": "BioSign2",
+    "owner": "condratiucs",
+    "slug": "biosign2",
+    "version": "1.0.1",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
-    "scheme": "biosign0",
+    "scheme": "biosign2",
     "userInterfaceStyle": "automatic",
     "splash": {
       "image": "./assets/images/icon.png",
@@ -15,9 +15,9 @@
     },
     "newArchEnabled": false,
     "ios": {
-      "buildNumber": "6",
+      "buildNumber": "1",
       "supportsTablet": true,
-      "bundleIdentifier": "com.sergiuc121.biosign0",
+      "bundleIdentifier": "com.sergiuc121.biosign2",
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false,
         "NSCameraUsageDescription": "This app uses the camera to allow users to take profile photos and scan documents.",
@@ -41,26 +41,25 @@
       "typedRoutes": true
     },
     "android": {
-      "package": "com.sergiuc121.biosign0"
+      "package": "com.sergiuc121.biosign2"
     },
     "extra": {
       "router": {},
       "eas": {
-        "projectId": "694d17cb-c7cc-403b-bf15-5d871187de26"
+        "projectId": "f5ab6d1b-cb7d-4f30-bb2e-fa65a90465a7"
       }
     },
     "runtimeVersion": {
       "policy": "appVersion"
     },
     "updates": {
-      "url": "https://u.expo.dev/694d17cb-c7cc-403b-bf15-5d871187de26",
+      "url": "https://u.expo.dev/",
       "enabled": true,
       "fallbackToCacheTimeout": 3000,
       "checkAutomatically": "ON_LOAD",
       "requestHeaders": {
         "expo-channel-name": "production"
       }
-    },
-
+    }
   }
 }

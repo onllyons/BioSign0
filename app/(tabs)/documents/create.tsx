@@ -3,45 +3,67 @@ import { useTheme } from '@/contexts/ThemeContext';
 import { Text, Input, Button, Card, Spacer } from '@/components/ui';
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
+import * as DocumentPicker from 'expo-document-picker';
+import { SERVER_AJAX_URL, useRequests } from "@/hooks/useRequests";
 
 export default function CreateDocumentScreen() {
   const { theme } = useTheme();
   const router = useRouter();
   const styles = createStyles(theme);
+  const { sendDefaultRequest } = useRequests();
 
   const [formData, setFormData] = useState({
     title: '',
     description: '',
-    type: '',
-    content: '',
+    file: null as null | { uri: string; name: string; mime: string },
   });
 
   const handleInputChange = (field: string, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }));
   };
 
-  const handleSave = () => {
-    if (!formData.title.trim()) {
-      Alert.alert('Error', 'Please enter a document title');
-      return;
+  const handlePickFile = async () => {
+    const res = await DocumentPicker.getDocumentAsync({
+      type: 'application/pdf',
+      copyToCacheDirectory: true,
+    });
+    if (!res.canceled) {
+      const f = res.assets[0];
+      setFormData(prev => ({
+        ...prev,
+        file: { uri: f.uri, name: f.name ?? 'document.pdf', mime: f.mimeType ?? 'application/pdf' },
+      }));
+      if (!formData.title) {
+        handleInputChange('title', (f.name ?? '').replace(/\.pdf$/i, ''));
+      }
     }
+  };
 
-    // Mock save action
-    Alert.alert(
-      'Success',
-      'Document created successfully!',
-      [
-        {
-          text: 'OK',
-          onPress: () => router.back(),
+const handleSave = async () => {
+  if (!formData.title.trim()) { Alert.alert('Error','Please enter a document title'); return; }
+  if (!formData.file) { Alert.alert('Error','Please select a PDF file to upload'); return; }
+
+  try {
+    await sendDefaultRequest({
+      url: `${SERVER_AJAX_URL}/documents/upload.php`,
+      showOptions: { success: true, error: true },
+      data: {
+        title: formData.title,
+        description: formData.description,
+        file: {
+          uri: formData.file.uri,
+          name: formData.file.name,
+          mime: formData.file.mime,
         },
-      ]
-    );
-  };
-
-  const handleCancel = () => {
+      },
+    });
     router.back();
-  };
+  } catch (e:any) {
+    Alert.alert('Error', e?.message ?? 'Upload failed');
+  }
+};
+
+  const handleCancel = () => router.back();
 
   return (
     <View style={styles.container}>
@@ -50,20 +72,14 @@ export default function CreateDocumentScreen() {
           <Text variant="headline" color="onSurface">Create New Document</Text>
           <Text variant="body" color="onSurfaceVariant">Document Information</Text>
           <Spacer size="md" />
+
           <Input
             label="Document Title"
             placeholder="Enter document title"
             value={formData.title}
             onChangeText={(value) => handleInputChange('title', value)}
-            accessibilityLabel="Document title input"
           />
-          <Input
-            label="Document Type"
-            placeholder="e.g., Contract, Agreement, Proposal"
-            value={formData.type}
-            onChangeText={(value) => handleInputChange('type', value)}
-            accessibilityLabel="Document type input"
-          />
+
           <Input
             label="Description"
             placeholder="Brief description of the document"
@@ -71,18 +87,16 @@ export default function CreateDocumentScreen() {
             onChangeText={(value) => handleInputChange('description', value)}
             multiline
             numberOfLines={3}
-            accessibilityLabel="Document description input"
           />
-          <Input
-            label="Content"
-            placeholder="Document content or notes"
-            value={formData.content}
-            onChangeText={(value) => handleInputChange('content', value)}
-            multiline
-            numberOfLines={6}
-            accessibilityLabel="Document content input"
+
+          <Spacer size="md" />
+          <Button
+            title={formData.file ? `Selected: ${formData.file.name}` : 'Choose PDF File'}
+            onPress={handlePickFile}
+            variant="outline"
           />
         </Card>
+
         <Spacer size="lg" />
         <View style={styles.actions}>
           <Button
@@ -93,7 +107,7 @@ export default function CreateDocumentScreen() {
           />
           <Spacer size="md" horizontal />
           <Button
-            title="Create Document"
+            title="Upload"
             onPress={handleSave}
             variant="primary"
             style={styles.actionButton}
@@ -105,27 +119,10 @@ export default function CreateDocumentScreen() {
 }
 
 const createStyles = (theme: any) => StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: theme.colors.background,
-  },
-  scrollView: {
-    flex: 1,
-  },
-  content: {
-    padding: theme.spacing.lg,
-  },
-  formCard: {
-    padding: theme.spacing.lg,
-  },
-  sectionTitle: {
-    marginBottom: theme.spacing.sm,
-  },
-  actions: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-  },
-  actionButton: {
-    flex: 1,
-  },
+  container: { flex: 1, backgroundColor: theme.colors.background },
+  scrollView: { flex: 1 },
+  content: { padding: theme.spacing.lg },
+  formCard: { padding: theme.spacing.lg },
+  actions: { flexDirection: 'row', justifyContent: 'space-between' },
+  actionButton: { flex: 1 },
 });

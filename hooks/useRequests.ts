@@ -68,39 +68,66 @@ export const useRequests = () => {
                 ...showOptions,
             };
 
-            let errorMessage = "Произошла ошибка, попробуйте позже";
+            let errorMessage = "An error occurred, please try again later";
 
             const formData = new FormData();
 
             data["tokens"] = getTokens();
 
+            // Object.keys(data).forEach((key) => {
+            //     const value = data[key] as unknown;
+
+            //     if (
+            //         typeof value === "object" &&
+            //         value !== null &&
+            //         (value as ImageValue)?.type === "image" &&
+            //         (value as ImageValue)?.uri
+            //     ) {
+            //         const img = value as ImageValue;
+            //         const ext = getFileTypeFromUri(img.uri) || "jpeg";
+            //         // @ts-ignore — в React Native типизация FormData не идеально точная
+            //         formData.append(key, {
+            //             uri: img.uri,
+            //             type: `image/${ext}`,
+            //             name: `image.${ext}`,
+            //         });
+            //     } else {
+            //         let selData: any = value;
+
+            //         if (typeof selData === "boolean") selData = selData ? 1 : 0;
+            //         else if (typeof selData === "object" && selData !== null)
+            //             selData = JSON.stringify(value);
+
+            //         formData.append(key, selData);
+            //     }
+            // });
+
             Object.keys(data).forEach((key) => {
-                const value = data[key] as unknown;
+              const value = data[key] as any;
 
-                if (
-                    typeof value === "object" &&
-                    value !== null &&
-                    (value as ImageValue)?.type === "image" &&
-                    (value as ImageValue)?.uri
-                ) {
-                    const img = value as ImageValue;
-                    const ext = getFileTypeFromUri(img.uri) || "jpeg";
-                    // @ts-ignore — в React Native типизация FormData не идеально точная
-                    formData.append(key, {
-                        uri: img.uri,
-                        type: `image/${ext}`,
-                        name: `image.${ext}`,
-                    });
-                } else {
-                    let selData: any = value;
+              if (
+                value &&
+                typeof value === "object" &&
+                "uri" in value &&
+                "name" in value &&
+                "mime" in value
+              ) {
+                formData.append(key, {
+                  uri: value.uri,
+                  name: value.name,
+                  type: value.mime,
+                });
+                return;
+              }
 
-                    if (typeof selData === "boolean") selData = selData ? 1 : 0;
-                    else if (typeof selData === "object" && selData !== null)
-                        selData = JSON.stringify(value);
+              let selData: any = value;
+              if (typeof selData === "boolean") selData = selData ? 1 : 0;
+              else if (typeof selData === "object" && selData !== null)
+                selData = JSON.stringify(value);
 
-                    formData.append(key, selData);
-                }
+              formData.append(key, selData);
             });
+
 
             try {
                 const { data: result } = await axios.post<T>(url, formData, {

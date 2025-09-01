@@ -517,7 +517,7 @@ export function DataProvider({children}: DataProviderProps) {
                 if (isAuthenticated() && !initResp.userAvailable) {
                     Toast.show({
                         type: "error",
-                        text1: "Произошла ошибка, токен недействителен",
+                        text1: "An error occurred, the token is invalid",
                     });
                     await logout();
                 } else if (initResp.userAvailable && initResp.user) {
@@ -526,7 +526,7 @@ export function DataProvider({children}: DataProviderProps) {
             } catch (err) {
                 Toast.show({
                     type: "error",
-                    text1: "Произошла ошибка, проверьте подключение к интернету",
+                    text1: "An error occurred, check your internet connection",
                 });
             } finally {
                 if (isCancelled) return;

@@ -1,5 +1,14 @@
-import React, { useState } from "react";
-import { View, StyleSheet, SafeAreaView, Image, Button, Pressable } from "react-native";
+import React, { useState, useCallback } from "react";
+import {
+  View,
+  StyleSheet,
+  SafeAreaView,
+  Image,
+  Button,
+  Pressable,
+  ScrollView,
+  RefreshControl,
+} from "react-native";
 import { useTheme } from "@/contexts/ThemeContext";
 import { Text } from "@/components/ui";
 import { getUser, isAuthenticated, logout } from "@/utils/Auth";
@@ -17,44 +26,64 @@ export default function ProfileScreen() {
   const isAuth = isAuthenticated();
   const [loader, setLoader] = useState(false);
   const { sendDefaultRequest } = useRequests();
-
+  const [refreshing, setRefreshing] = useState(false);
+  const [version, setVersion] = useState(0);
+  
   const handleGoToLogin = () => router.push("/login");
   const handleGoToChangePassword = () => router.push("/change-password");
-  const handleLogout = async () => { await logout(); restartApp(); };
-  
+  const handleLogout = async () => {
+    await logout();
+    restartApp();
+  };
+
   const handleConfirmEmail = async () => {
     setLoader(true);
-
     try {
       await sendDefaultRequest({
         url: `${SERVER_AJAX_URL}/user/send_confirm_email.php`,
       });
-    } catch (e) {
-      console.error("Error confirming email:", e);
     } finally {
       setLoader(false);
     }
   };
 
+const onRefresh = useCallback(async () => {
+  setRefreshing(true);
+  try {
+    // await reload?.(); // dacă există în DataContext
+    setVersion(v => v + 1); // remount local
+  } finally {
+    setRefreshing(false);
+  }
+}, []);
+
+
   const displayName = isAuth
     ? currentUser?.name || currentUser?.email?.split("@")?.[0] || "User"
     : "Guest";
 
-  const displayEmail = isAuth ? currentUser?.email || "—" : "Not logged in";
+  const displayEmail = isAuth ? currentUser?.email || "—" : "";
 
   const avatarUri =
-    "https://prium.github.io/falcon/v3.24.0/assets/img/team/4.jpg";
+    "https://cdn.pixabay.com/photo/2023/02/18/11/00/icon-7797704_1280.png";
 
-  // Condiție pentru a verifica dacă afișăm butonul Confirm email
   const showConfirmEmailButton =
-    !currentUser?.emailVerified && !currentUser?.byGoogle && !currentUser?.byApple;
+    !!isAuth &&
+    !!currentUser &&
+    !currentUser.emailVerified &&
+    !currentUser.byGoogle &&
+    !currentUser.byApple;
 
   return (
     <SafeAreaView style={styles.container}>
-      <View style={styles.wrapper}>
+      <ScrollView
+        contentContainerStyle={styles.wrapper}
+        refreshControl={
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+        }
+      >
         <Loader visible={loader} />
 
-        {/* Header */}
         <View style={styles.header}>
           <Image source={{ uri: avatarUri }} style={styles.avatar} />
           <Text variant="title" color="onBackground" style={styles.name}>
@@ -70,13 +99,9 @@ export default function ProfileScreen() {
             <InfoRow label="ID" value={String(currentUser.id)} />
             <InfoRow label="Name" value={currentUser.name || "—"} />
             <InfoRow label="Email" value={currentUser.email || "—"} />
-            {/*<InfoRow label="Email verified" value={currentUser.emailVerified ? "Yes" : "No"} />
-            <InfoRow label="Signed with Google" value={currentUser.byGoogle ? "Yes" : "No"} />
-            <InfoRow label="Signed with Apple" value={currentUser.byApple ? "Yes" : "No"} />*/}
           </View>
         )}
 
-        {/* Afișează butonul doar dacă niciuna dintre condițiile nu este adevărată */}
         {showConfirmEmailButton && (
           <Button title="Confirm email" onPress={handleConfirmEmail} />
         )}
@@ -89,8 +114,6 @@ export default function ProfileScreen() {
                 styles.logoutBtn,
                 pressed && styles.logoutBtnPressed,
               ]}
-              accessibilityRole="button"
-              accessibilityLabel="Change Password"
             >
               <Text variant="button" color="primary" style={styles.logoutText}>
                 Change Password
@@ -103,8 +126,6 @@ export default function ProfileScreen() {
                 styles.logoutBtn,
                 pressed && styles.logoutBtnPressed,
               ]}
-              accessibilityRole="button"
-              accessibilityLabel="Logout"
               testID="profile-logout-button"
             >
               <Text variant="button" color="primary" style={styles.logoutText}>
@@ -119,8 +140,6 @@ export default function ProfileScreen() {
               styles.logoutBtn,
               pressed && styles.logoutBtnPressed,
             ]}
-            accessibilityRole="button"
-            accessibilityLabel="Go to Login"
             testID="profile-login-button"
           >
             <Text variant="button" color="primary" style={styles.logoutText}>
@@ -128,18 +147,13 @@ export default function ProfileScreen() {
             </Text>
           </Pressable>
         )}
-      </View>
+      </ScrollView>
     </SafeAreaView>
   );
 }
 
 const InfoRow = ({ label, value }: { label: string; value: string }) => (
-  <View
-    style={infoStyles.row}
-    accessible
-    accessibilityRole="text"
-    accessibilityLabel={`${label}: ${value}`}
-  >
+  <View style={infoStyles.row}>
     <Text variant="body" color="onSurfaceVariant">
       {label}
     </Text>
