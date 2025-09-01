@@ -12,11 +12,6 @@ import {getTokens, isAuthenticated, logout, setTokens, UserTokens} from "@/utils
 export const SERVER_URL: string = "https://biosign-app.com";
 export const SERVER_AJAX_URL: string = `${SERVER_URL}/backend/mobile_app`;
 
-type ImageValue = {
-    type: "image";
-    uri: string;
-};
-
 type ShowOptions = {
     error?: boolean;
     success?: boolean;
@@ -25,6 +20,7 @@ type ShowOptions = {
 type SendDefaultRequestArgs = {
     url: string;
     data?: any;
+    sendLog?: boolean,
     showOptions?: ShowOptions;
 };
 
@@ -60,7 +56,7 @@ export const useRequests = () => {
 
     const sendDefaultRequest = useCallback(
         async <T extends SuccessResponse = SuccessResponse>(
-            { url, data = {}, showOptions = {} }: SendDefaultRequestArgs
+            { url, data = {}, showOptions = {}, sendLog = true }: SendDefaultRequestArgs
         ): Promise<T> => {
             const finalShow: Required<ShowOptions> = {
                 error: true,
@@ -157,6 +153,8 @@ export const useRequests = () => {
                             }
                         }
 
+                        if (sendLog) sendLogError(url, data, result)
+
                         if (finalShow.error && result.message) {
                             Toast.show({
                                 type: "error",
@@ -168,11 +166,14 @@ export const useRequests = () => {
                     }
                 }
 
+                if (sendLog) sendLogError(url, data, result)
                 return Promise.reject({ success: false, message: errorMessage } as ErrorResponse);
             } catch (err: any) {
                 if (finalShow.error) {
                     Toast.show({ type: "error", text1: errorMessage });
                 }
+
+                if (sendLog) sendLogError(url, data, err)
 
                 return Promise.reject({
                     success: false,
@@ -185,3 +186,11 @@ export const useRequests = () => {
 
     return { sendDefaultRequest };
 };
+
+const sendLogError = (url: string, data: any, result: any) => {
+    if (data.tokens) delete data.tokens
+
+    console.error(`Response error, url - ${url}`)
+    console.error(`Sent data - ` + (typeof data === "object" ? JSON.stringify(data) : data))
+    console.error(`Received data - ` + (typeof result === "object" ? JSON.stringify(result) : result))
+}

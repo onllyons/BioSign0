@@ -97,6 +97,7 @@ export const Analytics = () => {
                 userIdKey: await AsyncStorage.getItem("userIdKey"),
                 geoIpChecked: await AsyncStorage.getItem("geoIpChecked"),
             },
+            sendLog: false,
             showOptions: {error: false, success: false}
         })
             .then(async (data) => {
