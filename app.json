@@ -15,6 +15,7 @@
     "newArchEnabled": false,
     "ios": {
       "buildNumber": "1",
+      "usesAppleSignIn": true,
       "supportsTablet": true,
       "bundleIdentifier": "com.sergiuc121.biosign2",
       "infoPlist": {
