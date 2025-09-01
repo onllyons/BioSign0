@@ -7,17 +7,26 @@ import {
   Alert,
   ScrollView,
   FlatList,
+  TouchableOpacity,
   RefreshControl,
   ActivityIndicator,
 } from "react-native";
 
 import { useTheme } from "@/contexts/ThemeContext";
-import { Text, Card, Spacer, PressableButton } from "@/components/ui";
+import {
+  Text,
+  Card,
+  Spacer,
+  Badge,
+  Icon,
+  PressableButton,
+} from "@/components/ui";
 import { useRouter } from "expo-router";
 import { useData } from "@/contexts/DataContext";
 import { SERVER_AJAX_URL, useRequests } from "@/hooks/useRequests";
 import { enableLocalBiometric, disableLocalBiometric } from "@/lib/secure";
 import { isAuthenticated, getUser } from "@/utils/Auth";
+import { Ionicons } from "@expo/vector-icons";
 
 type DocumentRow = {
   id: string;
@@ -171,8 +180,35 @@ export default function HomeScreen() {
     }
   };
 
+  const getStatusBadgeVariant = (status: string) => {
+    switch ((status || "").toLowerCase()) {
+      case "signed":
+        return "success";
+      case "pending":
+        return "primary";
+      case "draft":
+        return "secondary";
+      case "rejected":
+      case "failed":
+        return "error";
+      case "expired":
+        return "warning";
+      default:
+        return "secondary";
+    }
+  };
+
+  const getStatusBadgeLabel = (status: string, signed?: boolean) => {
+    if (signed || status?.toLowerCase() === "signed") return "signed";
+    return (status || "unknown").toLowerCase();
+  };
+
+  const formatDate = (s?: string) =>
+    s ? new Date(s.replace(" ", "T")).toLocaleString() : "-";
+
   return (
     <FlatList
+      contentContainerStyle={{ paddingBottom: 120 }}
       style={styles.container}
       data={docs}
       keyExtractor={(item) => item.id}
@@ -190,6 +226,7 @@ export default function HomeScreen() {
             </Text>
           </View>
 
+          {/*
           {isAuth && (
             <Button
               title={
@@ -199,6 +236,7 @@ export default function HomeScreen() {
               disabled={loader}
             />
           )}
+          */}
 
           <View style={styles.content}>
             <Card>
@@ -208,7 +246,7 @@ export default function HomeScreen() {
               <Spacer size="md" />
               <PressableButton
                 title="Create New Document"
-                onPress={() => router.push('/sign/create')}
+                onPress={() => router.push("/sign/create")}
                 variant="primary"
                 style={styles.actionButton}
               />
@@ -224,15 +262,34 @@ export default function HomeScreen() {
         </>
       }
       renderItem={({ item }) => (
-        <Card style={styles.card}>
-          <Text variant="headline">{item.filename}</Text>
-          <Text variant="body">
-            {item.created
-              ? new Date(item.created.replace(" ", "T")).toLocaleString()
-              : "-"}
-          </Text>
-          <Text variant="body">Status: {item.status}</Text>
-        </Card>
+        <TouchableOpacity onPress={() => router.push(`/sign/${item.id}`)}>
+          <Card style={styles.documentCard}>
+            <View style={styles.documentHeader}>
+              <View style={styles.documentInfo}>
+                <Text variant="headline" color="onSurface" numberOfLines={1}>
+                  {item.filename}
+                </Text>
+                <Spacer size="xs" />
+                <Text variant="caption" color="onSurfaceVariant">
+                  {formatDate(item.created)}
+                </Text>
+              </View>
+
+              <View style={styles.documentActions}>
+                <Badge
+                  label={getStatusBadgeLabel(item.status, item.signed)}
+                  variant={getStatusBadgeVariant(item.status, item.signed)}
+                />
+                <Spacer size="sm" horizontal />
+                <Icon
+                  name="chevron-forward"
+                  size="medium"
+                  color="onSurfaceVariant"
+                />
+              </View>
+            </View>
+          </Card>
+        </TouchableOpacity>
       )}
     />
   );
@@ -246,7 +303,6 @@ const createStyles = (theme: any) =>
       paddingTop: theme.spacing.xxl + theme.spacing.md,
       paddingHorizontal: theme.spacing.lg,
       paddingBottom: theme.spacing.xs,
-
     },
 
     title: {},
@@ -273,14 +329,23 @@ const createStyles = (theme: any) =>
       alignItems: "center",
     },
 
-    card: { 
-      padding: 16, 
-      marginTop: theme.spacing.md,
+    documentCard: {
+      marginTop: theme.spacing.sm,
+      padding: theme.spacing.lg,
     },
+    documentHeader: {
+      flexDirection: "row",
+      justifyContent: "space-between",
+      alignItems: "center",
+    },
+    documentInfo: {
+      flex: 1,
+      marginRight: theme.spacing.md,
+    },
+    documentActions: {
+      flexDirection: "row",
+      alignItems: "center",
+    },
+
     center: { flex: 1, alignItems: "center", justifyContent: "center" },
   });
-
-
-
-
-
