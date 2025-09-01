@@ -7,7 +7,7 @@ import {
     useNavigation,
 } from "@react-navigation/native";
 
-import {getTokens, logout, setTokens, UserTokens} from "@/utils/Auth";
+import {getTokens, isAuthenticated, logout, setTokens, UserTokens} from "@/utils/Auth";
 
 export const SERVER_URL: string = "https://biosign-app.com";
 export const SERVER_AJAX_URL: string = `${SERVER_URL}/backend/mobile_app`;
@@ -72,7 +72,7 @@ export const useRequests = () => {
 
             const formData = new FormData();
 
-            data["tokens"] = getTokens();
+            if (getTokens() !== null) data["tokens"] = getTokens();
 
             // Object.keys(data).forEach((key) => {
             //     const value = data[key] as unknown;
@@ -146,13 +146,13 @@ export const useRequests = () => {
 
                         return Promise.resolve(result);
                     } else {
-                        if (result.tokensError) {
+                        if (result.tokensError && isAuthenticated()) {
                             await logout();
 
                             if (navigation) {
                                 navigation.reset({
                                     index: 0,
-                                    routes: [{ name: "Songs" as never }],
+                                    routes: [{ name: "(tabs)" as never }],
                                 });
                             }
                         }

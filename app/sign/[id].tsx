@@ -1,7 +1,7 @@
-import { useEffect, useState } from "react";
+import {useEffect, useState} from "react";
 import { View, ActivityIndicator } from "react-native";
 import { Text } from "@/components/ui";
-import { useLocalSearchParams } from "expo-router";
+import {useLocalSearchParams} from "expo-router";
 import { SERVER_AJAX_URL, useRequests } from "@/hooks/useRequests";
 
 export default function DocumentDetailScreen() {
@@ -41,7 +41,7 @@ export default function DocumentDetailScreen() {
     <View>
       <Text variant="headline">{doc.filename}</Text>
       <Text>{doc.status}</Text>
-      <Text>{new Date(doc.created.replace(" ", "T")).toLocaleString()}</Text>
+      <Text>{new Date(doc.created_at.replace(" ", "T")).toLocaleString()}</Text>
     </View>
   );
 }

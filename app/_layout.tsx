@@ -59,10 +59,11 @@ export default function RootLayout() {
                 <AppGate>
                     <>
                         <Stack screenOptions={{headerShown: false}}>
-                            <Stack.Screen name="(tabs)" options={{headerShown: false}}/>
+                            <Stack.Screen name="(tabs)" options={{headerShown: false, title: "Tabs"}}/>
                             {!isAuthenticated() && (
                                 <Stack.Screen name="(auth)" options={{headerShown: false}}/>
                             )}
+                            <Stack.Screen name="sign/[id]" options={{headerShown: true, title: "Sign"}}/>
                             <Stack.Screen name="+not-found"/>
                         </Stack>
                         <StatusBar style="auto"/>
