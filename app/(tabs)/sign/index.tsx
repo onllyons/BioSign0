@@ -1,4 +1,5 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback } from "react";
+import { useRouter, useFocusEffect } from "expo-router";
 import * as LocalAuthentication from "expo-local-authentication";
 import {
   View,
@@ -21,7 +22,6 @@ import {
   Icon,
   PressableButton,
 } from "@/components/ui";
-import { useRouter } from "expo-router";
 import { useData } from "@/contexts/DataContext";
 import { SERVER_AJAX_URL, useRequests } from "@/hooks/useRequests";
 import { enableLocalBiometric, disableLocalBiometric } from "@/lib/secure";
@@ -67,6 +67,18 @@ export default function HomeScreen() {
     });
     return !!data?.isBiometricEnabled;
   };
+
+useFocusEffect(
+  useCallback(() => {
+    let mounted = true;
+    (async () => {
+      // doar refetch, fără să pornești RefreshControl
+      await fetchDocuments();
+    })();
+    return () => { mounted = false; };
+  }, [])
+);
+
 
   const saveBiometricStatus = async (status: boolean) => {
     const data = await sendDefaultRequest<{
