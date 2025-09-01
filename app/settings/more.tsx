@@ -56,7 +56,7 @@ const MoreSettingsScreen: React.FC = () => {
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
         <Text variant="title" color="onBackground" style={styles.title}>
-          More Settings
+          More Settings 2
         </Text>
         <Text variant="body" color="onSurfaceVariant" style={styles.subtitle}>
           Additional settings and preferences

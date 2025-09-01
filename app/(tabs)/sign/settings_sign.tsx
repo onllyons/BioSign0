@@ -22,11 +22,10 @@ export default function TabsLayout() {
         },
       }}
     >
-      <Tabs.Screen name="index" options={{ href: null }} />
       <Tabs.Screen
-        name="sign"
+        name="index"
         options={{
-          title: 'Home t',
+          title: 'Home',
           tabBarIcon: ({ color, size, focused }) => (
             <Ionicons name={focused ? 'home' : 'home-outline'} size={size} color={color} />
           ),
