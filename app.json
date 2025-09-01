@@ -1,7 +1,6 @@
 {
   "expo": {
     "name": "BioSign2",
-    "owner": "condratiucs",
     "slug": "biosign2",
     "version": "1.0.1",
     "orientation": "portrait",
@@ -16,6 +15,7 @@
     "newArchEnabled": false,
     "ios": {
       "buildNumber": "1",
+      "usesAppleSignIn": true,
       "supportsTablet": true,
       "bundleIdentifier": "com.sergiuc121.biosign2",
       "infoPlist": {
@@ -35,19 +35,14 @@
       "expo-font",
       "expo-web-browser",
       "expo-splash-screen",
-      "expo-secure-store"
+      "expo-secure-store",
+      "expo-apple-authentication"
     ],
     "experiments": {
       "typedRoutes": true
     },
     "android": {
       "package": "com.sergiuc121.biosign2"
-    },
-    "extra": {
-      "router": {},
-      "eas": {
-        "projectId": "f5ab6d1b-cb7d-4f30-bb2e-fa65a90465a7"
-      }
     },
     "runtimeVersion": {
       "policy": "appVersion"
@@ -59,6 +54,12 @@
       "checkAutomatically": "ON_LOAD",
       "requestHeaders": {
         "expo-channel-name": "production"
+      }
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "3610d443-ea0c-4331-84c8-c7c9ec7f04b2"
       }
     }
   }
