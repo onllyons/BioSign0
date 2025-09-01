@@ -1,4 +1,4 @@
-import {EventArg, NavigationState, PartialState, useNavigation} from "@react-navigation/native";
+import {useNavigation} from "@react-navigation/native";
 import {useCallback, useEffect, useRef} from "react";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import {getDeviceInfo} from "@/utils/Utils";
@@ -6,7 +6,7 @@ import {SERVER_AJAX_URL, SuccessResponse, useRequests} from "@/hooks/useRequests
 import {isAuthenticated} from "@/utils/Auth";
 
 type AnalyticResponse = SuccessResponse & {
-    userIdKey: string;
+    userIdKey: string | number;
     geoIpChecked: boolean
 };
 
@@ -103,7 +103,7 @@ export const Analytics = () => {
                 if (data.geoIpChecked) await AsyncStorage.setItem("geoIpChecked", "1")
 
                 if (!isAuthenticated() && data.userIdKey) {
-                    await AsyncStorage.setItem("userIdKey", data.userIdKey)
+                    await AsyncStorage.setItem("userIdKey", `${data.userIdKey}`)
                 }
 
                 if (data.timeUpdated) {
