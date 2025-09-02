@@ -238,7 +238,6 @@ useFocusEffect(
             </Text>
           </View>
 
-          {/*
           {isAuth && (
             <Button
               title={
@@ -248,7 +247,6 @@ useFocusEffect(
               disabled={loader}
             />
           )}
-          */}
 
           <View style={styles.content}>
             <Card>
