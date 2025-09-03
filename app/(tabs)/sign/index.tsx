@@ -238,7 +238,7 @@ useFocusEffect(
             </Text>
           </View>
 
-          {isAuth && (
+{/*          {isAuth && (
             <Button
               title={
                 isBiometricEnabled ? "Disable Biometric" : "Enable Biometric"
@@ -246,7 +246,7 @@ useFocusEffect(
               onPress={handleSetBiometricAuth}
               disabled={loader}
             />
-          )}
+          )}*/}
 
           <View style={styles.content}>
             <Card>
@@ -261,12 +261,12 @@ useFocusEffect(
                 style={styles.actionButton}
               />
               <Spacer size="sm" />
-              <PressableButton
+              {/*<PressableButton
                 title="View Recent Documents"
                 onPress={() => router.push("/documents")}
                 variant="outline"
                 style={styles.actionButton}
-              />
+              />*/}
             </Card>
           </View>
         </>
@@ -277,7 +277,8 @@ useFocusEffect(
             <View style={styles.documentHeader}>
               <View style={styles.documentInfo}>
                 <Text variant="headline" color="onSurface" numberOfLines={1}>
-                  {item.filename}
+                  {item.title}
+                  {/*{item.filename}*/}
                 </Text>
                 <Spacer size="xs" />
                 <Text variant="caption" color="onSurfaceVariant">

@@ -46,12 +46,13 @@ export default function TabsLayout() {
       />
       <Tabs.Screen
         name="activity"
-        options={{
-          title: 'Activity',
-          tabBarIcon: ({ color, size, focused }) => (
-            <Ionicons name={focused ? 'time' : 'time-outline'} size={size} color={color} />
-          ),
-        }}
+        // options={{
+        //   title: 'Activity',
+        //   tabBarIcon: ({ color, size, focused }) => (
+        //     <Ionicons name={focused ? 'time' : 'time-outline'} size={size} color={color} />
+        //   ),
+        // }}
+        options={{ href: null }}
       />
       <Tabs.Screen
         name="profile"

@@ -1,11 +1,11 @@
 {
   "expo": {
-    "name": "BioSign2",
-    "slug": "biosign2",
-    "version": "1.0.1",
+    "name": "BioSign",
+    "slug": "biosign",
+    "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
-    "scheme": "biosign2",
+    "scheme": "biosign",
     "userInterfaceStyle": "automatic",
     "splash": {
       "image": "./assets/images/icon.png",
@@ -17,7 +17,7 @@
       "buildNumber": "1",
       "usesAppleSignIn": true,
       "supportsTablet": true,
-      "bundleIdentifier": "com.sergiuc121.biosign2",
+      "bundleIdentifier": "com.biosignapp.biosign",
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false,
         "NSCameraUsageDescription": "This app uses the camera to allow users to take profile photos and scan documents.",
@@ -36,13 +36,14 @@
       "expo-web-browser",
       "expo-splash-screen",
       "expo-secure-store",
-      "expo-apple-authentication"
+      "expo-apple-authentication",
+      "expo-localization"
     ],
     "experiments": {
       "typedRoutes": true
     },
     "android": {
-      "package": "com.sergiuc121.biosign2"
+      "package": "com.biosignapp.biosign"
     },
     "runtimeVersion": {
       "policy": "appVersion"
@@ -59,8 +60,9 @@
     "extra": {
       "router": {},
       "eas": {
-        "projectId": "f5ab6d1b-cb7d-4f30-bb2e-fa65a90465a7"
+        "projectId": "74851f4f-8678-4a39-a621-460ff0e2335b"
       }
-    }
+    },
+    "owner": "condratiucs"
   }
 }

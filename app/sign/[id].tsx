@@ -1,10 +1,15 @@
-import { useEffect, useState } from "react";
-import { View, ActivityIndicator, StyleSheet, Platform } from "react-native";
+import { useEffect, useState, useMemo } from "react";
+import { View, ActivityIndicator, StyleSheet, Platform, Alert } from "react-native";
 import { Text, Card, Spacer, Badge, PressableButton } from "@/components/ui";
 import { useLocalSearchParams } from "expo-router";
 import { SERVER_AJAX_URL, useRequests } from "@/hooks/useRequests";
 import * as FileSystem from "expo-file-system";
 import FileViewer from "react-native-file-viewer";
+
+import * as Device from "expo-device";
+import * as Application from "expo-application";
+import * as Localization from "expo-localization";
+import { getTokens } from "@/utils/Auth"; // ⬅️ asigură-te că ai asta
 
 const isValidUUID = (id?: string) => !!id && /^[0-9a-fA-F-]{36}$/.test(id);
 const BASE_URL = "https://biosign-app.com/";
@@ -35,6 +40,35 @@ export default function DocumentDetailScreen() {
   const [error, setError] = useState<string | null>(null);
   const [opening, setOpening] = useState(false);
   const [progress, setProgress] = useState<number>(0);
+  const [signing, setSigning] = useState(false);
+
+  const timezone = useMemo(() => Localization.timezone ?? "UTC", []);
+
+const handleSignConsent = async () => {
+  try {
+    const device = {
+      model: `${Device.manufacturer ?? ""} ${Device.modelName ?? ""}`.trim(),
+      os: `${Device.osName ?? (Platform.OS === "ios" ? "iOS" : "Android")} ${Device.osVersion ?? ""}`,
+      appVersion: Application.nativeApplicationVersion ?? Application.nativeBuildVersion ?? "unknown",
+    };
+    const timezone = Localization.timezone ?? "UTC";
+
+    await sendDefaultRequest({
+      url: `${SERVER_AJAX_URL}/documents/consent.php`,
+      showOptions: { success: true, error: true },
+      data: {
+        documentId: id,
+        timezone,
+        device, // hook-ul tău îl stringify-uiește în FormData
+      },
+    });
+
+    setDoc((d: any) => ({ ...d, status: "signed" }));
+  } catch (e: any) {
+    Alert.alert("Error", e?.message ?? "Sign failed");
+  }
+};
+
 
   useEffect(() => {
     (async () => {
@@ -44,6 +78,10 @@ export default function DocumentDetailScreen() {
         return;
       }
       try {
+        const tokens = getTokens?.();
+        const headers: Record<string, string> = { "Content-Type": "application/json" };
+        if (tokens?.accessToken) headers.Authorization = `Bearer ${tokens.accessToken}`;
+
         const res = await sendDefaultRequest<{
           success: boolean;
           document?: any;
@@ -52,7 +90,8 @@ export default function DocumentDetailScreen() {
         }>({
           url: `${SERVER_AJAX_URL}/documents/item.php`,
           method: "POST",
-          data: { id }, // UUID ca string (serverul tău așteaptă string)
+          data: { id }, // UUID ca string
+          headers,
         });
 
         if (res.success && res.document) {
@@ -69,10 +108,8 @@ export default function DocumentDetailScreen() {
   }, [id]);
 
   const buildFileUrl = () => {
-    // storage_key vine din DB, ex: "uploads/docs/abc.pdf"
     let key: string = doc?.storage_key || "";
     if (!key) return null;
-    // asigură-te că nu dublezi / între BASE_URL și key
     const hasSlash = BASE_URL.endsWith("/") || key.startsWith("/");
     return hasSlash ? `${BASE_URL}${key.replace(/^\//, "")}` : `${BASE_URL}/${key}`;
   };
@@ -89,7 +126,6 @@ export default function DocumentDetailScreen() {
       setError(null);
       setProgress(0);
 
-      // nume de fișier local (fallback dacă nu avem nume în URL)
       const filenameFromUrl = (() => {
         try {
           const u = new URL(fileUrl);
@@ -103,37 +139,24 @@ export default function DocumentDetailScreen() {
 
       const fileUri = `${FileSystem.documentDirectory}${filenameFromUrl}`;
 
-      // progress callback (opțional)
-      const dl = FileSystem.createDownloadResumable(
-        fileUrl,
-        fileUri,
-        {},
-        (p) => {
-          if (p.totalBytesExpectedToWrite > 0) {
-            setProgress(p.totalBytesWritten / p.totalBytesExpectedToWrite);
-          }
+      const dl = FileSystem.createDownloadResumable(fileUrl, fileUri, {}, (p) => {
+        if (p.totalBytesExpectedToWrite > 0) {
+          setProgress(p.totalBytesWritten / p.totalBytesExpectedToWrite);
         }
-      );
+      });
 
       const download = await dl.downloadAsync();
+      if (!download?.uri) throw new Error("Failed to download file.");
 
-      if (!download?.uri) {
-        throw new Error("Failed to download file.");
-      }
-
-      // Android cere uneori mimeType corect:
       const mime = guessMime(download.uri) || guessMime(filenameFromUrl);
 
       await FileViewer.open(download.uri, {
-        showOpenWithDialog: true, // pe Android oferă alegere app
+        showOpenWithDialog: true,
         showAppsSuggestions: true,
         displayName: doc?.filename || filenameFromUrl, // iOS only
         type: Platform.OS === "android" ? mime : undefined,
       });
-
     } catch (e: any) {
-      // mesaje frecvente:
-      // - "No app associated with this mime type" pe Android dacă nu există viewer
       setError(e?.message || "Failed to open file");
     } finally {
       setOpening(false);
@@ -152,10 +175,8 @@ export default function DocumentDetailScreen() {
   if (error) {
     return (
       <View style={styles.center}>
-        <Text variant="body" color="error">{error}</Text>
+        <Text variant="body" color="error">{String(error)}</Text>
         <Spacer size="md" />
-        {/* opțional: buton retry */}
-        {/* <PressableButton title="Retry" variant="outline" onPress={() => { setLoading(true); setError(null); /* re-trigger useEffect by changing id or use a separate loader */ /* }} /> */}
       </View>
     );
   }
@@ -191,14 +212,27 @@ export default function DocumentDetailScreen() {
         />
         <Spacer size="lg" />
         <PressableButton
-          title={opening ? (progress > 0 ? `Downloading ${Math.round(progress * 100)}%` : "Opening...") : "Open document"}
+          title={
+            opening
+              ? (progress > 0 ? `Downloading ${Math.round(progress * 100)}%` : "Opening...")
+              : "Open document"
+          }
           onPress={openDocument}
           disabled={opening}
           variant="primary"
         />
-        {/* opțional: arată URL-ul construit în dev */}
-        {/* <Spacer size="sm" />
-        <Text variant="caption" color="onSurfaceVariant">{buildFileUrl()}</Text> */}
+
+        {String(doc.status).toLowerCase() !== "signed" && (
+          <>
+            <Spacer size="md" />
+            <PressableButton
+              title={signing ? "Signing..." : "Sign Document"}
+              onPress={handleSignConsent}
+              disabled={signing}
+              variant="primary"
+            />
+          </>
+        )}
       </Card>
     </View>
   );

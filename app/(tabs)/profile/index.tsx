@@ -8,6 +8,7 @@ import {
   Pressable,
   ScrollView,
   RefreshControl,
+  Alert,
 } from "react-native";
 import { useTheme } from "@/contexts/ThemeContext";
 import { Text } from "@/components/ui";
@@ -28,7 +29,7 @@ export default function ProfileScreen() {
   const { sendDefaultRequest } = useRequests();
   const [refreshing, setRefreshing] = useState(false);
   const [version, setVersion] = useState(0);
-  
+
   const handleGoToLogin = () => router.push("/login");
   const handleGoToChangePassword = () => router.push("/change-password");
   const handleLogout = async () => {
@@ -47,16 +48,36 @@ export default function ProfileScreen() {
     }
   };
 
-const onRefresh = useCallback(async () => {
-  setRefreshing(true);
-  try {
-    // await reload?.(); // dacă există în DataContext
-    setVersion(v => v + 1); // remount local
-  } finally {
-    setRefreshing(false);
-  }
-}, []);
+  const onRefresh = useCallback(async () => {
+    setRefreshing(true);
+    try {
+      setVersion((v) => v + 1);
+    } finally {
+      setRefreshing(false);
+    }
+  }, []);
 
+  // 👉 Fake Delete Profile
+  const handleDeleteProfile = () => {
+    Alert.alert(
+      "Delete Profile",
+      "Are you sure you want to delete your profile?",
+      [
+        {
+          text: "No",
+          style: "cancel",
+        },
+        {
+          text: "Yes",
+          onPress: () =>
+            Alert.alert(
+              "Profile Scheduled for Deletion",
+              "Your profile will be deleted within 24 hours and all your data will be removed."
+            ),
+        },
+      ]
+    );
+  };
 
   const displayName = isAuth
     ? currentUser?.name || currentUser?.email?.split("@")?.[0] || "User"
@@ -132,6 +153,19 @@ const onRefresh = useCallback(async () => {
                 Log out
               </Text>
             </Pressable>
+
+            {/* 👇 Fake Delete Profile Button */}
+            <Pressable
+              onPress={handleDeleteProfile}
+              style={({ pressed }) => [
+                styles.logoutBtn,
+                pressed && styles.logoutBtnPressed,
+              ]}
+            >
+              <Text variant="button" color="error" style={styles.logoutText}>
+                Delete Profile
+              </Text>
+            </Pressable>
           </>
         ) : (
           <Pressable
@@ -162,6 +196,7 @@ const InfoRow = ({ label, value }: { label: string; value: string }) => (
     </Text>
   </View>
 );
+
 
 const infoStyles = StyleSheet.create({
   row: {

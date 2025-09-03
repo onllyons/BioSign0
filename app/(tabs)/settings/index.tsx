@@ -231,7 +231,7 @@ export default function SettingsScreen() {
 
         <View style={styles.menuContainer}>
         <View style={styles.menuGroup}>
-          <TouchableOpacity
+          {/*<TouchableOpacity
             style={[styles.menuRow, styles.firstMenuRow]}
             onPress={() => router.push('/settings/more')}
             accessibilityRole="button"
@@ -265,26 +265,26 @@ export default function SettingsScreen() {
               size={18}
               color={theme.colors.onSurfaceVariant}
             />
-          </TouchableOpacity>
+          </TouchableOpacity>*/}
 
 
-          <View style={styles.menuSeparator} />
+          {/*<View style={styles.menuSeparator} />
           <TouchableOpacity style={[styles.menuRow, styles.lastMenuRow]} accessibilityRole="button" hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
             <Text variant="body" color="onSurface" style={styles.menuLabel}>Camera access</Text>
             <Ionicons name="chevron-forward" size={18} color={theme.colors.onSurfaceVariant}/>
-          </TouchableOpacity>
+          </TouchableOpacity>*/}
 
-          <View style={styles.menuSeparator} />
+          {/*<View style={styles.menuSeparator} />
           <TouchableOpacity style={[styles.menuRow, styles.lastMenuRow]} accessibilityRole="button" hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
             <Text variant="body" color="onSurface" style={styles.menuLabel}>Rate Us</Text>
             <Ionicons name="chevron-forward" size={18} color={theme.colors.onSurfaceVariant}/>
-          </TouchableOpacity>
+          </TouchableOpacity>*/}
 
-          <View style={styles.menuSeparator} />
+          {/*<View style={styles.menuSeparator} />
           <TouchableOpacity style={[styles.menuRow, styles.lastMenuRow]} accessibilityRole="button" hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
             <Text variant="body" color="onSurface" style={styles.menuLabel}>Share App</Text>
             <Ionicons name="chevron-forward" size={18} color={theme.colors.onSurfaceVariant}/>
-          </TouchableOpacity>
+          </TouchableOpacity>*/}
 
           <View style={styles.menuSeparator} />
           <TouchableOpacity
