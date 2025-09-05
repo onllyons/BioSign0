@@ -68,18 +68,6 @@ export default function HomeScreen() {
     return !!data?.isBiometricEnabled;
   };
 
-useFocusEffect(
-  useCallback(() => {
-    let mounted = true;
-    (async () => {
-      // doar refetch, fără să pornești RefreshControl
-      await fetchDocuments();
-    })();
-    return () => { mounted = false; };
-  }, [])
-);
-
-
   const saveBiometricStatus = async (status: boolean) => {
     const data = await sendDefaultRequest<{
       success: boolean;
@@ -106,7 +94,7 @@ useFocusEffect(
         setLoader(false);
       }
     })();
-  }, []);
+  }, [isAuth]);
 
   const fetchDocuments = async () => {
     if (!isAuth) return;
@@ -126,19 +114,56 @@ useFocusEffect(
       console.log("Failed to load documents", e);
     }
   };
-  useEffect(() => {
+
+  useFocusEffect(
+  useCallback(() => {
     if (!isAuth) return;
-    (async () => {
-      setLoading(true);
-      await fetchDocuments();
-      setLoading(false);
-    })();
-  }, []);
-  const onRefresh = async () => {
-    setRefreshing(true);
+    fetchDocuments();
+  }, [isAuth])
+);
+
+
+
+useEffect(() => {
+  if (!isAuth) {
+    setLoading(false);   // <-- adaugă asta ca să nu rămâi blocat pe spinner
+    return;
+  }
+  (async () => {
+    setLoading(true);
     await fetchDocuments();
-    setRefreshing(false);
-  };
+    setLoading(false);
+  })();
+}, [isAuth]);
+
+if (!isAuth) {
+  return (
+    <View style={styles.center}>
+      <Text variant="body">Please sign in to view your documents.</Text>
+      <Spacer size="md" />
+      <PressableButton title="Go to Sign In" onPress={() => router.replace("/login")} />
+    </View>
+  );
+}
+
+if (loading) {
+  return (
+    <View style={styles.center}>
+      <ActivityIndicator size="large" />
+    </View>
+  );
+}
+
+
+const onRefresh = async () => {
+  if (!isAuth) return;
+  setRefreshing(true);
+  await fetchDocuments();
+  setRefreshing(false);
+};
+
+
+
   if (loading) {
     return (
       <View style={styles.center}>
