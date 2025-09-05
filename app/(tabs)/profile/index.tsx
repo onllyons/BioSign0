@@ -188,23 +188,44 @@ export default function ProfileScreen() {
 
 const InfoRow = ({ label, value }: { label: string; value: string }) => (
   <View style={infoStyles.row}>
-    <Text variant="body" color="onSurfaceVariant">
+    <Text variant="body" color="onSurfaceVariant" style={infoStyles.label}>
       {label}
     </Text>
-    <Text variant="body" color="onBackground" style={{ fontWeight: "600" }}>
-      {value}
-    </Text>
+
+    <View style={infoStyles.valueWrap}>
+      <Text
+        variant="body"
+        color="onBackground"
+        style={infoStyles.value}
+        numberOfLines={1}
+        ellipsizeMode="middle"
+        selectable
+      >
+        {value}
+      </Text>
+    </View>
   </View>
 );
-
 
 const infoStyles = StyleSheet.create({
   row: {
     paddingVertical: 8,
     flexDirection: "row",
-    justifyContent: "space-between",
     borderBottomWidth: StyleSheet.hairlineWidth,
     borderBottomColor: "#E5E7EB",
+    gap: 12,
+  },
+  label: {
+    width: 80,
+  },
+  valueWrap: {
+    flex: 1,
+    minWidth: 0,
+  },
+  value: {
+    fontWeight: "600",
+    flexShrink: 1,
+    textAlign: 'right'
   },
 });
 
