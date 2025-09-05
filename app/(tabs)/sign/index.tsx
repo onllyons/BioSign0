@@ -94,6 +94,7 @@ useFocusEffect(
 
   // --- la mount: ia flag-ul din DB ---
   useEffect(() => {
+    if (!isAuth) return;
     (async () => {
       try {
         setLoader(true);
@@ -108,6 +109,7 @@ useFocusEffect(
   }, []);
 
   const fetchDocuments = async () => {
+    if (!isAuth) return;
     try {
       const res = await sendDefaultRequest<{
         success: boolean;
@@ -125,6 +127,7 @@ useFocusEffect(
     }
   };
   useEffect(() => {
+    if (!isAuth) return;
     (async () => {
       setLoading(true);
       await fetchDocuments();
