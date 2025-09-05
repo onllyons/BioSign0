@@ -2,7 +2,7 @@
   "expo": {
     "name": "BioSign",
     "slug": "biosign",
-    "version": "1.0.0",
+    "version": "1.0.1",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
     "scheme": "biosign",
@@ -14,7 +14,7 @@
     },
     "newArchEnabled": false,
     "ios": {
-      "buildNumber": "1",
+      "buildNumber": "2",
       "usesAppleSignIn": true,
       "supportsTablet": true,
       "bundleIdentifier": "com.biosignapp.biosign",
@@ -49,7 +49,7 @@
       "policy": "appVersion"
     },
     "updates": {
-      "url": "https://u.expo.dev/",
+      "url": "https://u.expo.dev/0f608035-bc54-4326-82fb-e45edb8f1b5c",
       "enabled": true,
       "fallbackToCacheTimeout": 3000,
       "checkAutomatically": "ON_LOAD",

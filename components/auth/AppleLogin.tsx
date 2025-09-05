@@ -51,7 +51,7 @@ export const AppleLogin = ({setLoader}: {setLoader: (value: boolean) => void}) =
                 console.log("error")
                 Toast.show({
                     type: "error",
-                    text1: "Ошибка авторизации"
+                    text1: "Authorization error"
                 });
             }
         } finally {
