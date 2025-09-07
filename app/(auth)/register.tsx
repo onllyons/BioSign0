@@ -14,7 +14,7 @@ import {Link} from 'expo-router';
 import {useTheme} from '@/contexts/ThemeContext';
 import {Text, Spacer} from '@/components/ui';
 import Loader from "@/components/modals/Loader";
-import {ErrorResponse, SERVER_AJAX_URL, SuccessResponse, useRequests} from "@/hooks/useRequests";
+import {SERVER_AJAX_URL, SuccessResponse, useRequests} from "@/hooks/useRequests";
 import {login, User, UserTokens} from "@/utils/Auth";
 import {useData} from "@/contexts/DataContext";
 
@@ -44,7 +44,7 @@ export default function RegisterScreen() {
 
         try {
             const data = await sendDefaultRequest<AuthResponse>({
-                url: `${SERVER_AJAX_URL}/user/register.php`,
+                url: `${SERVER_AJAX_URL}/user/register_v2.php`,
                 data: {...userData},
                 showOptions: {success: false}
             })

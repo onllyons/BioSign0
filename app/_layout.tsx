@@ -7,6 +7,7 @@ import Toast, {BaseToast, BaseToastProps, ErrorToast} from "react-native-toast-m
 import {isAuthenticated} from "@/utils/Auth";
 import {Analytics} from "@/components/analytics/Analytics";
 import AppGate from "../AppGate";
+import React from "react";
 
 const toastConfig = {
     success: (props: BaseToastProps) => (
@@ -63,6 +64,8 @@ export default function RootLayout() {
                             {!isAuthenticated() && (
                                 <Stack.Screen name="(auth)" options={{headerShown: false}}/>
                             )}
+                            <Stack.Screen name="mail-verify" options={{headerShown: true, title: "Verify email"}}/>
+                            <Stack.Screen name="reset-password" options={{headerShown: true, title: "Reset password"}}/>
                             <Stack.Screen name="sign/[id]" options={{headerShown: true, title: "Sign"}}/>
                             <Stack.Screen name="+not-found"/>
                         </Stack>

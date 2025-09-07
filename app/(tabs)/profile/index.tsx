@@ -41,7 +41,7 @@ export default function ProfileScreen() {
     setLoader(true);
     try {
       await sendDefaultRequest({
-        url: `${SERVER_AJAX_URL}/user/send_confirm_email.php`,
+        url: `${SERVER_AJAX_URL}/user/send_confirm_email_v2.php`,
       });
     } finally {
       setLoader(false);

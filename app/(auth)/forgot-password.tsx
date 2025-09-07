@@ -11,7 +11,7 @@ import {
     Keyboard,
     ScrollView,
 } from 'react-native';
-import {useRouter, Link} from 'expo-router';
+import {Link} from 'expo-router';
 import {useTheme} from '@/contexts/ThemeContext';
 import {Text, Spacer} from '@/components/ui';
 import {SERVER_AJAX_URL, useRequests} from "@/hooks/useRequests";
@@ -19,7 +19,6 @@ import Loader from "@/components/modals/Loader";
 
 export default function ForgotPasswordScreen() {
     const {theme} = useTheme();
-    const router = useRouter();
     const styles = createStyles(theme);
     const {sendDefaultRequest} = useRequests()
     const [loader, setLoader] = useState(false)
@@ -31,7 +30,7 @@ export default function ForgotPasswordScreen() {
 
         try {
             await sendDefaultRequest({
-                url: `${SERVER_AJAX_URL}/user/send_reset_mail.php`,
+                url: `${SERVER_AJAX_URL}/user/send_reset_mail_v2.php`,
                 data: {email}
             })
         } catch (e) {
