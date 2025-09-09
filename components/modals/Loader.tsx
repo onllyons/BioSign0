@@ -7,6 +7,7 @@ import {
     View, Dimensions,
 } from "react-native";
 import MaterialIndicator from "@/components/indicators/MaterialIndicator";
+import {useHeaderHeight} from "@react-navigation/elements";
 
 interface SpinnerPropTypes {
     overlayColor?: string;
@@ -52,11 +53,14 @@ const Loader: React.FC<SpinnerPropTypes> = React.memo(
          visible = false,
          mode = "modal"
      }) => {
+        const headerHeight = useHeaderHeight();
+
         return mode === "container" ? (
             <View style={[
                 !visible && {display: "none"},
-                styles.containerAbsolute,
                 styles.container,
+                styles.containerAbsolute,
+                {paddingBottom: headerHeight},
                 {backgroundColor: overlayColor}
             ]}>
                 <Indicator options={{size}}/>
@@ -100,8 +104,8 @@ const styles = StyleSheet.create({
     },
     container: {
         backgroundColor: "transparent",
-        height: Dimensions.get("screen").height,
-        width: Dimensions.get("screen").width,
+        height: Dimensions.get("window").height,
+        width: Dimensions.get("window").width,
         alignItems: "center",
         justifyContent: "center",
     },
@@ -109,6 +113,10 @@ const styles = StyleSheet.create({
         position: "absolute",
         top: 0,
         left: 0,
+        right: 0,
+        bottom: 0,
+        height: "auto",
+        width: "auto",
         zIndex: 10
     },
     activityIndicator: {
