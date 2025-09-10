@@ -1,250 +1,118 @@
-import React, { useEffect, useState, useCallback } from "react";
+// HomeScreen.tsx
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { View, StyleSheet, FlatList, TouchableOpacity, RefreshControl, ActivityIndicator } from "react-native";
 import { useRouter, useFocusEffect } from "expo-router";
-import * as LocalAuthentication from "expo-local-authentication";
-import {
-  View,
-  StyleSheet,
-  Button,
-  Alert,
-  ScrollView,
-  FlatList,
-  TouchableOpacity,
-  RefreshControl,
-  ActivityIndicator,
-} from "react-native";
-
 import { useTheme } from "@/contexts/ThemeContext";
-import {
-  Text,
-  Card,
-  Spacer,
-  Badge,
-  Icon,
-  PressableButton,
-} from "@/components/ui";
-import { useData } from "@/contexts/DataContext";
+import { Text, Card, Spacer, Badge, Icon, PressableButton } from "@/components/ui";
 import { SERVER_AJAX_URL, useRequests } from "@/hooks/useRequests";
-import { enableLocalBiometric, disableLocalBiometric } from "@/lib/secure";
-import { isAuthenticated, getUser } from "@/utils/Auth";
-import { Ionicons } from "@expo/vector-icons";
+import { isAuthenticated } from "@/utils/Auth";
 
+type DocumentStatus = "signed" | "pending" | "draft" | "rejected" | "failed" | "expired" | "unknown";
 type DocumentRow = {
   id: string;
-  filename: string;
-  created: string;
-  status: string;
+  title?: string;
+  filename?: string;
+  created?: string;
+  status?: DocumentStatus;
+  signed?: boolean;
 };
+
+type ApiListDocuments = { success: boolean; documents: DocumentRow[] };
 
 export default function HomeScreen() {
   const { theme } = useTheme();
-  const { documents } = useData();
+  const styles = useMemo(() => createStyles(theme), [theme]);
   const router = useRouter();
-  const styles = createStyles(theme);
   const { sendDefaultRequest } = useRequests();
-  const [refreshing, setRefreshing] = useState(false);
-  const totalDocuments = documents.length;
-  const signedDocuments = documents.filter((doc) => doc.signed).length;
-  const pendingDocuments = totalDocuments - signedDocuments;
-
-  const [loader, setLoader] = useState(false);
-  const [isBiometricEnabled, setIsBiometricEnabled] = useState(false);
 
   const isAuth = isAuthenticated();
-  const currentUser = isAuth ? getUser() : null;
 
-  const [loading, setLoading] = useState(true);
+  const [initialLoading, setInitialLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const [docs, setDocs] = useState<DocumentRow[]>([]);
 
-  // --- API helpers (UNICE) ---
-  const fetchBiometricStatus = async () => {
-    const data = await sendDefaultRequest<{
-      success: boolean;
-      isBiometricEnabled: boolean;
-    }>({
-      url: `${SERVER_AJAX_URL}/user/security_get.php`,
+  const mountedRef = useRef(true);
+  useEffect(() => {
+    mountedRef.current = true;
+    return () => { mountedRef.current = false; };
+  }, []);
+
+  const fetchDocuments = useCallback(async (): Promise<void> => {
+    const res = await sendDefaultRequest<ApiListDocuments>({
+      url: `${SERVER_AJAX_URL}/documents/list.php`,
       data: {},
       showOptions: { success: false },
     });
-    return !!data?.isBiometricEnabled;
-  };
+    if (res?.success && Array.isArray(res.documents)) {
+      setDocs(res.documents);
+      setError(null);
+    } else {
+      throw new Error("Invalid response");
+    }
+  }, [sendDefaultRequest]);
 
-  const saveBiometricStatus = async (status: boolean) => {
-    const data = await sendDefaultRequest<{
-      success: boolean;
-      isBiometricEnabled: boolean;
-    }>({
-      url: `${SERVER_AJAX_URL}/user/security_set.php`,
-      data: { isBiometricEnabled: status },
-      showOptions: { success: false },
-    });
-    return !!data?.success;
-  };
-
-  // --- la mount: ia flag-ul din DB ---
   useEffect(() => {
-    if (!isAuth) return;
+    if (!isAuth) { setInitialLoading(false); return; }
     (async () => {
       try {
-        setLoader(true);
-        const s = await fetchBiometricStatus();
-        setIsBiometricEnabled(s);
-      } catch (e) {
-        console.log("Failed to fetch biometric flag", e);
+        setInitialLoading(true);
+        await fetchDocuments();
+      } catch (e: any) {
+        if (mountedRef.current) setError(e?.message ?? "Failed to load documents");
       } finally {
-        setLoader(false);
+        if (mountedRef.current) setInitialLoading(false);
       }
     })();
-  }, [isAuth]);
+  }, [isAuth, fetchDocuments]);
 
-  const fetchDocuments = async () => {
+  useFocusEffect(useCallback(() => {
     if (!isAuth) return;
-    try {
-      const res = await sendDefaultRequest<{
-        success: boolean;
-        documents: DocumentRow[];
-      }>({
-        url: `${SERVER_AJAX_URL}/documents/list.php`,
-        data: {},
-        showOptions: { success: false },
-      });
-      if (res.success) {
-        setDocs(res.documents);
-      }
-    } catch (e) {
-      console.log("Failed to load documents", e);
+    let active = true;
+    (async () => { try { await fetchDocuments(); } catch { active && setError("Failed to refresh documents"); } })();
+    return () => { active = false; };
+  }, [isAuth, fetchDocuments]));
+
+  const onRefresh = useCallback(async () => {
+    if (!isAuth) return;
+    try { setRefreshing(true); await fetchDocuments(); } 
+    catch (e: any) { setError(e?.message ?? "Failed to refresh documents"); } 
+    finally { setRefreshing(false); }
+  }, [isAuth, fetchDocuments]);
+
+  const getStatusBadgeVariant = (status?: string, signed?: boolean) => {
+    const s = (status ?? (signed ? "signed" : "unknown")).toLowerCase();
+    switch (s) {
+      case "signed": return "success";
+      case "pending": return "primary";
+      case "draft": return "secondary";
+      case "rejected":
+      case "failed": return "error";
+      case "expired": return "warning";
+      default: return "secondary";
     }
   };
+  const getStatusBadgeLabel = (status?: string, signed?: boolean) => (signed || status?.toLowerCase() === "signed") ? "signed" : (status ?? "unknown").toLowerCase();
+  const formatDate = (s?: string) => {
+    if (!s) return "-";
+    const iso = s.includes("T") ? s : s.replace(" ", "T");
+    const d = new Date(iso);
+    return isNaN(d.getTime()) ? s : d.toLocaleString();
+  };
 
-  useFocusEffect(
-  useCallback(() => {
-    if (!isAuth) return;
-    fetchDocuments();
-  }, [isAuth])
-);
-
-
-
-useEffect(() => {
   if (!isAuth) {
-    setLoading(false);   // <-- adaugă asta ca să nu rămâi blocat pe spinner
-    return;
-  }
-  (async () => {
-    setLoading(true);
-    await fetchDocuments();
-    setLoading(false);
-  })();
-}, [isAuth]);
-
-if (!isAuth) {
-  return (
-    <View style={styles.center}>
-      <Text variant="body">Please sign in to view your documents.</Text>
-      <Spacer size="md" />
-      <PressableButton title="Go to Sign In" onPress={() => router.replace("/login")} />
-    </View>
-  );
-}
-
-if (loading) {
-  return (
-    <View style={styles.center}>
-      <ActivityIndicator size="large" />
-    </View>
-  );
-}
-
-
-const onRefresh = async () => {
-  if (!isAuth) return;
-  setRefreshing(true);
-  await fetchDocuments();
-  setRefreshing(false);
-};
-
-
-
-  if (loading) {
     return (
       <View style={styles.center}>
-        <ActivityIndicator size="large" />
+        <Text variant="body">Please sign in to view your documents.</Text>
+        <Spacer size="md" />
+        <PressableButton title="Go to Sign In" onPress={() => router.replace("/login")} />
       </View>
     );
   }
 
-  const handleSetBiometricAuth = async () => {
-    try {
-      setLoader(true);
-
-      if (isBiometricEnabled) {
-        // Dezactivare: server + local
-        const ok = await saveBiometricStatus(false);
-        if (ok) {
-          await disableLocalBiometric();
-          setIsBiometricEnabled(false);
-        }
-        return;
-      }
-
-      // Activare
-      const compatible = await LocalAuthentication.hasHardwareAsync();
-      const enrolled = await LocalAuthentication.isEnrolledAsync();
-      if (!compatible || !enrolled) {
-        Alert.alert(
-          "Biometrie indisponibilă",
-          "Activează Face ID / amprentă în setările telefonului."
-        );
-        return;
-      }
-
-      // Cere o dată biometria la activare (confirmare)
-      const res = await LocalAuthentication.authenticateAsync({
-        promptMessage: "Activează autentificarea biometrică",
-        fallbackLabel: "Folosește parola",
-      });
-      if (!res.success) return;
-
-      // 1) salvează preferința pe server
-      const ok = await saveBiometricStatus(true);
-      if (!ok) {
-        Alert.alert("Eroare", "Nu am putut salva preferința pe server.");
-        return;
-      }
-
-      // 2) salvează token local care cere biometrie la pornire
-      await enableLocalBiometric();
-
-      setIsBiometricEnabled(true);
-    } finally {
-      setLoader(false);
-    }
-  };
-
-  const getStatusBadgeVariant = (status: string) => {
-    switch ((status || "").toLowerCase()) {
-      case "signed":
-        return "success";
-      case "pending":
-        return "primary";
-      case "draft":
-        return "secondary";
-      case "rejected":
-      case "failed":
-        return "error";
-      case "expired":
-        return "warning";
-      default:
-        return "secondary";
-    }
-  };
-
-  const getStatusBadgeLabel = (status: string, signed?: boolean) => {
-    if (signed || status?.toLowerCase() === "signed") return "signed";
-    return (status || "unknown").toLowerCase();
-  };
-
-  const formatDate = (s?: string) =>
-    s ? new Date(s.replace(" ", "T")).toLocaleString() : "-";
+  if (initialLoading) {
+    return (<View style={styles.center}><ActivityIndicator size="large" /></View>);
+  }
 
   return (
     <FlatList
@@ -252,35 +120,16 @@ const onRefresh = async () => {
       style={styles.container}
       data={docs}
       keyExtractor={(item) => item.id}
-      refreshControl={
-        <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
-      }
+      refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
       ListHeaderComponent={
         <>
           <View>
-            <Text variant="title" color="onBackground">
-              BioSign
-            </Text>
-            <Text variant="body" color="onSurfaceVariant">
-              Welcome to your biometric signature app
-            </Text>
+            <Text variant="title" color="onBackground">BioSign</Text>
+            <Text variant="body" color="onSurfaceVariant">Welcome to your biometric signature app</Text>
           </View>
-
-{/*          {isAuth && (
-            <Button
-              title={
-                isBiometricEnabled ? "Disable Biometric" : "Enable Biometric"
-              }
-              onPress={handleSetBiometricAuth}
-              disabled={loader}
-            />
-          )}*/}
-
           <View style={styles.content}>
             <Card>
-              <Text variant="headline" color="onSurface">
-                Quick Actions
-              </Text>
+              <Text variant="headline" color="onSurface">Quick Actions</Text>
               <Spacer size="md" />
               <PressableButton
                 title="Create New Document"
@@ -288,48 +137,50 @@ const onRefresh = async () => {
                 variant="primary"
                 style={styles.actionButton}
               />
-              <Spacer size="sm" />
-              {/*<PressableButton
-                title="View Recent Documents"
-                onPress={() => router.push("/documents")}
-                variant="outline"
-                style={styles.actionButton}
-              />*/}
             </Card>
           </View>
+          {error && (
+            <>
+              <Spacer size="md" />
+              <Card>
+                <Text variant="body" color="error">⚠️ {error}</Text>
+                <Spacer size="sm" />
+                <PressableButton title="Retry" onPress={onRefresh} />
+              </Card>
+            </>
+          )}
         </>
       }
+      ListEmptyComponent={
+        <Card style={{ marginTop: theme.spacing.md, padding: theme.spacing.lg }}>
+          <Text variant="body" color="onSurfaceVariant">No documents yet.</Text>
+          <Spacer size="sm" />
+          <PressableButton title="Create your first document" onPress={() => router.push("/sign/create")} />
+        </Card>
+      }
       renderItem={({ item }) => (
-        <TouchableOpacity onPress={() => router.push(`/sign/${item.id}`)}>
+        <TouchableOpacity onPress={() => router.push(`/sign/${item.id}`)} activeOpacity={0.7}>
           <Card style={styles.documentCard}>
             <View style={styles.documentHeader}>
               <View style={styles.documentInfo}>
                 <Text variant="headline" color="onSurface" numberOfLines={1}>
-                  {item.title}
-                  {/*{item.filename}*/}
+                  {item.title || item.filename || "Untitled document"}
                 </Text>
                 <Spacer size="xs" />
-                <Text variant="caption" color="onSurfaceVariant">
-                  {formatDate(item.created)}
-                </Text>
+                <Text variant="caption" color="onSurfaceVariant">{formatDate(item.created)}</Text>
               </View>
-
               <View style={styles.documentActions}>
-                <Badge
-                  label={getStatusBadgeLabel(item.status, item.signed)}
-                  variant={getStatusBadgeVariant(item.status, item.signed)}
-                />
+                <Badge label={getStatusBadgeLabel(item.status, item.signed)} variant={getStatusBadgeVariant(item.status, item.signed)} />
                 <Spacer size="sm" horizontal />
-                <Icon
-                  name="chevron-forward"
-                  size="medium"
-                  color="onSurfaceVariant"
-                />
+                <Icon name="chevron-forward" size="medium" color="onSurfaceVariant" />
               </View>
             </View>
           </Card>
         </TouchableOpacity>
       )}
+      initialNumToRender={8}
+      windowSize={11}
+      removeClippedSubviews
     />
   );
 }
@@ -343,48 +194,11 @@ const createStyles = (theme: any) =>
       paddingHorizontal: theme.spacing.lg,
       paddingBottom: theme.spacing.xs,
     },
-
-    title: {},
-    subtitle: {
-      textAlign: "left",
-    },
-    content: {
-      flex: 1,
-    },
-    sectionTitle: {
-      marginBottom: theme.spacing.lg,
-    },
-    actionButton: {
-      width: "100%",
-    },
-    statsCard: {
-      padding: theme.spacing.xl,
-    },
-    statsRow: {
-      flexDirection: "row",
-      justifyContent: "space-around",
-    },
-    statItem: {
-      alignItems: "center",
-    },
-
-    documentCard: {
-      marginTop: theme.spacing.sm,
-      padding: theme.spacing.lg,
-    },
-    documentHeader: {
-      flexDirection: "row",
-      justifyContent: "space-between",
-      alignItems: "center",
-    },
-    documentInfo: {
-      flex: 1,
-      marginRight: theme.spacing.md,
-    },
-    documentActions: {
-      flexDirection: "row",
-      alignItems: "center",
-    },
-
+    content: { flex: 1 },
+    actionButton: { width: "100%" },
+    documentCard: { marginTop: theme.spacing.sm, padding: theme.spacing.lg },
+    documentHeader: { flexDirection: "row", justifyContent: "space-between", alignItems: "center" },
+    documentInfo: { flex: 1, marginRight: theme.spacing.md },
+    documentActions: { flexDirection: "row", alignItems: "center" },
     center: { flex: 1, alignItems: "center", justifyContent: "center" },
   });

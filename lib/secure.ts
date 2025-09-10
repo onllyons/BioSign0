@@ -5,7 +5,7 @@ const KEY = 'biometric_unlock_token';
 export async function enableLocalBiometric() {
   await SecureStore.setItemAsync(KEY, 'enabled', {
     keychainService: 'biosign.biometric',
-    requireAuthentication: true,
+    // requireAuthentication: false,
   });
 }
 export async function hasLocalBiometric() {
