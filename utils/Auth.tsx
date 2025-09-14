@@ -72,3 +72,23 @@ export const setTokens = async (obj: UserTokensAccess) => {
 
     await setStoredValueAsync("tokens", next, true);
 };
+
+export const initAuthFromStorage = async () => {
+  try {
+    const savedUser = await getStoredValue<User>("user", true);
+    const savedTokens = await getStoredValue<UserTokens>("tokens", true);
+
+    if (savedUser && savedTokens?.accessToken) {
+      user = savedUser;
+      tokens = savedTokens;
+    } else {
+      user = null;
+      tokens = null;
+    }
+  } catch {
+    user = null;
+    tokens = null;
+  }
+};
+
+

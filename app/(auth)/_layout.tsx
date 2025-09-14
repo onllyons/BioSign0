@@ -1,19 +1,13 @@
-// app/(auth)/_layout.tsx (sau AuthLayout.tsx)
 import React from "react";
 import { Pressable, Platform, StyleSheet } from "react-native";
 import { Stack, useRouter } from "expo-router";
-import { Text } from "@/components/ui"; // folosește propriul tău Text; sau înlocuiește cu react-native Text
+import { Icon } from "@/components/ui";
 
-/**
- * Mic component care afișează butonul Back în header.
- * - Dacă există istoric: router.back()
- * - Dacă NU există istoric: router.replace(fallback)
- */
+
 function BackButton({ fallback = "/" }: { fallback?: string }) {
   const router = useRouter();
 
   const handleBack = () => {
-    // @ts-ignore - în expo-router există canGoBack()
     if (typeof router.canGoBack === "function" && router.canGoBack()) {
       router.back();
     } else {
@@ -30,10 +24,7 @@ function BackButton({ fallback = "/" }: { fallback?: string }) {
         Platform.OS === "android" ? { borderless: true } : undefined
       }
     >
-      {/* Poți schimba cu o iconiță din expo/vector-icons, ex: Ionicons name="chevron-back" */}
-      <Text variant="body" color="primary" style={styles.backLabel}>
-        ← Back
-      </Text>
+      <Icon name="chevron-back-outline" color="primary" accessibilityLabel="Go back" />
     </Pressable>
   );
 }
@@ -41,11 +32,14 @@ function BackButton({ fallback = "/" }: { fallback?: string }) {
 export default function AuthLayout() {
   return (
     <Stack
-      screenOptions={{
+      screenOptions={({ route }) => ({
         headerShown: true,
-        headerBackTitleVisible: false, // ascunde textul implicit iOS
-        headerLeft: () => <BackButton fallback="/" />, // ← buton back OBLIGATORIU pe toate ecranele
-      }}
+        headerBackTitleVisible: false,
+        headerLeft: () => {
+          if (route.name === "login") return null; // 👉 ascunde back pe login
+          return <BackButton fallback="/" />;
+        },
+      })}
     >
       <Stack.Screen name="login" options={{ title: "Login" }} />
       <Stack.Screen name="register" options={{ title: "Create account" }} />
@@ -64,9 +58,6 @@ const styles = StyleSheet.create({
   },
   backBtnPressed: {
     opacity: 0.7,
-  },
-  backLabel: {
-    fontSize: 16,
   },
   hitSlop: { top: 8, bottom: 8, left: 8, right: 8 } as any,
 });

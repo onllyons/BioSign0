@@ -2,7 +2,7 @@
   "expo": {
     "name": "BioSign",
     "slug": "biosign",
-    "version": "1.0.2",
+    "version": "1.0.4",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
     "scheme": "biosign",
@@ -14,7 +14,7 @@
     },
     "newArchEnabled": false,
     "ios": {
-      "buildNumber": "3",
+      "buildNumber": "4",
       "usesAppleSignIn": true,
       "supportsTablet": true,
       "bundleIdentifier": "com.biosignapp.biosign",
@@ -23,7 +23,7 @@
         "NSCameraUsageDescription": "BioSign uses the camera to capture documents that you upload for signing. For example, you can take a photo of a contract or invoice to sign within the app.",
         "NSPhotoLibraryUsageDescription": "BioSign needs access to your photo library to let you select existing images or documents that you want to upload and sign. For example, you can choose a scanned file from your gallery to sign.",
         "NSPhotoLibraryAddUsageDescription": "BioSign can save signed or scanned documents to your photo library when you choose to. For example, you can export a signed document and keep a copy in your gallery.",
-        
+        "NSFaceIDUsageDescription": "We use Face ID to securely unlock the app and protect your data."
       }
     },
     "web": {
