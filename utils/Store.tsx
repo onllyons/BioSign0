@@ -23,7 +23,7 @@ export const initStore = async () => {
 
 export const setStoredValue = (key: string, value: any) => stored[key] = value;
 
-export const setStoredValueAsync = async (key: string, value: any, saveKey = false): Promise<void> => {
+export const setStoredValueAsync = async (key: string, value: any, saveKey = false, days: number | null = null): Promise<void> => {
     setStoredValue(key, value);
 
     if (saveKey && storedAllKeys.indexOf(key) === -1) {
@@ -33,8 +33,11 @@ export const setStoredValueAsync = async (key: string, value: any, saveKey = fal
     }
 
     key = `${STORED_ASYNC_PREFIX}__${key}`;
+    let expired = -1
 
-    await AsyncStorage.setItem(key, JSON.stringify({expired: -1, data: value}));
+    if (days) expired = Date.now() + days * 86400 * 1000;
+
+    await AsyncStorage.setItem(key, JSON.stringify({expired: expired, data: value}));
 };
 
 export const getStoredValue = (key: string): any | null => stored[key] !== undefined ? stored[key] : null;

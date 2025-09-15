@@ -4,6 +4,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import {getDeviceInfo} from "@/utils/Utils";
 import {SERVER_AJAX_URL, SuccessResponse, useRequests} from "@/hooks/useRequests";
 import {isAuthenticated} from "@/utils/Auth";
+import {getStoredValueAsync, setStoredValueAsync} from "@/utils/Store";
 
 type AnalyticResponse = SuccessResponse & {
     userIdKey: string | number;
@@ -88,23 +89,30 @@ export const Analytics = () => {
 
         const screen = analyticsInfo.current["screen"]
         const lengthStayOnScreen = lengthStayOnScreens.current[screen]
+        let userIdKey = await AsyncStorage.getItem("userIdKey")
+        let geoIpChecked = await getStoredValueAsync(`geoIpChecked-${userIdKey}`)
 
         sendDefaultRequest<AnalyticResponse>({
             url: `${SERVER_AJAX_URL}/send_analytics.php`,
             data: {
                 ...analyticsInfo.current,
-                lengthStayOnScreen: lengthStayOnScreen,
+                lengthStayOnScreen,
                 userIdKey: await AsyncStorage.getItem("userIdKey"),
-                geoIpChecked: await AsyncStorage.getItem("geoIpChecked"),
+                geoIpChecked,
             },
             sendLog: false,
             showOptions: {error: false, success: false}
         })
             .then(async (data) => {
-                if (data.geoIpChecked) await AsyncStorage.setItem("geoIpChecked", "1")
-
-                if (!isAuthenticated() && data.userIdKey) {
+                if (data.userIdKey) {
                     await AsyncStorage.setItem("userIdKey", `${data.userIdKey}`)
+                    userIdKey = `${data.userIdKey}`
+                }
+
+                geoIpChecked = await getStoredValueAsync(`geoIpChecked-${userIdKey}`)
+
+                if (data.geoIpChecked && !geoIpChecked) {
+                    await setStoredValueAsync(`geoIpChecked-${userIdKey}`, 1, false, 1)
                 }
 
                 if (data.timeUpdated) {
