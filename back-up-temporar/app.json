@@ -1,11 +1,11 @@
 {
   "expo": {
     "name": "BioSign",
-    "slug": "biosignflight",
-    "version": "1.0.1",
+    "slug": "biosign",
+    "version": "1.0.5",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
-    "scheme": "biosignflight",
+    "scheme": "biosign",
     "userInterfaceStyle": "automatic",
     "splash": {
       "image": "./assets/images/icon.png",
@@ -14,10 +14,10 @@
     },
     "newArchEnabled": false,
     "ios": {
-      "buildNumber": "1",
+      "buildNumber": "5",
       "usesAppleSignIn": true,
       "supportsTablet": true,
-      "bundleIdentifier": "com.biosignappt.biosignflight",
+      "bundleIdentifier": "com.biosignapp.biosign",
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false,
         "NSCameraUsageDescription": "BioSign uses the camera to capture documents that you upload for signing. For example, you can take a photo of a contract or invoice to sign within the app.",
@@ -44,7 +44,7 @@
       "typedRoutes": true
     },
     "android": {
-      "package": "com.biosignappt.biosignflight"
+      "package": "com.biosignapp.biosign"
     },
     "runtimeVersion": {
       "policy": "appVersion"
